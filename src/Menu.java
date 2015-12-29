@@ -268,10 +268,10 @@ public class Menu implements Runnable{
             //saving the levels details
             try {
 
-                propsForStore.store(new FileOutputStream(new File(file + ".properties")), "Saved Level");
+                propsForStore.store(new FileOutputStream(new File("src/" + file + ".properties")), "Saved Level");
 
                 //saving the level in the level list properties
-                File levels = new File("levels.properties");
+                File levels = new File("src/levels.properties");
 
                 if (levels.exists() && !levels.isDirectory()) {
 
@@ -325,7 +325,7 @@ public class Menu implements Runnable{
 
             Properties properties = new Properties();
             try {
-                properties.load(new FileInputStream(new File("levels.properties")));
+                properties.load(new FileInputStream(new File("src/levels.properties")));
             } catch (Exception e) { properties = null; }
 
             if (properties == null) {
@@ -428,7 +428,7 @@ public class Menu implements Runnable{
                     Properties newLevelProp = new Properties();
 
                     try {
-                        newLevelProp.load(new FileInputStream(new File(chosenLevel + ".properties")));
+                        newLevelProp.load(new FileInputStream(new File("src/" + chosenLevel + ".properties")));
                     } catch (Exception e) { e.printStackTrace(); }
 
                     loadLevel(newLevelProp);
