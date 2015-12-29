@@ -1,3 +1,4 @@
+
 import com.googlecode.lanterna.input.Key;
 import com.googlecode.lanterna.terminal.Terminal;
 
@@ -133,6 +134,28 @@ public class Menu implements Runnable{
         }
 
         writeOut(options[index - direction], index - direction);
+    }
+
+    //TODO
+    public void rehighlightForLoad(String[] options, int index, int direction, int elementNumber) {
+
+        int index2 = index % elementNumber;
+
+        if (index2 == 0) index2 = elementNumber;
+
+        highlight(options[index], index2);
+
+        if (index == 1 && direction == 1) {
+            writeOut(options[elementNumber], elementNumber);
+            return;
+        }
+
+        if (index == options.length-1 && direction == -1) {
+            writeOut(options[options.length - elementNumber + 2],1);
+            return;
+        }
+
+        writeOut(options[index - direction], index2 - direction);
     }
 
     ///after clicking enter
@@ -325,22 +348,26 @@ public class Menu implements Runnable{
                 }
 
             }
-
+            //the number of saved levels
             int n = Integer.parseInt(properties.getProperty("Count"));
-
-            writeOut("Press Escape to get back", 0);
+            //the number of pages needed
+            int pageCount = (n * 2) / (height - 4) + 1;
+            //number of elements on one of the pages
+            int elementNumber = (height - 4) / 2;
 
             String[] options = new String[n + 1];
 
-            for (int i = 1; i <= n; i++) {
+            for (int i = 1; i < options.length; i++) {
 
                 String level = properties.getProperty(Integer.toString(i));
 
                 options[i] = level;
 
-                writeOut(level, i);
-
             }
+
+            int pageNumber = 1;
+
+            printLoadPage(pageNumber, elementNumber, options, pageCount);
 
             highlight(options[1], 1);
 
@@ -359,15 +386,39 @@ public class Menu implements Runnable{
                 if (key != null && key.getKind() == Key.Kind.ArrowDown) {
                     if (options.length == 2) continue;
                     chosenOption++;
-                    if (chosenOption >= options.length) chosenOption = 1;
-                    rehighlight(options, chosenOption, 1);
+                    if (chosenOption >= options.length) {
+                        chosenOption = 1;
+                        pageNumber = 1;
+                        printLoadPage(pageNumber, elementNumber, options, pageCount);
+                        highlight(options[chosenOption], 1);
+                        continue;
+                    }
+                    if (chosenOption > pageNumber*elementNumber) {
+                        pageNumber++;
+                        printLoadPage(pageNumber, elementNumber, options, pageCount);
+                        highlight(options[chosenOption], 1);
+                        continue;
+                    }
+                    rehighlightForLoad(options, chosenOption, 1, elementNumber);
                 }
 
                 if (key != null && key.getKind() == Key.Kind.ArrowUp) {
                     if (options.length == 2) continue;
                     chosenOption--;
-                    if (chosenOption <= 0) chosenOption = options.length - 1;
-                    rehighlight(options, chosenOption, -1);
+                    if (chosenOption <= 0) {
+                        chosenOption = options.length - 1;
+                        pageNumber = pageCount;
+                        printLoadPage(pageNumber, elementNumber, options, pageCount);
+                        highlight(options[chosenOption], options.length - (pageCount - 1)*elementNumber - 1);
+                        continue;
+                    }
+                    if (chosenOption <= (pageNumber-1)*elementNumber) {
+                        pageNumber--;
+                        printLoadPage(pageNumber, elementNumber, options, pageCount);
+                        highlight(options[chosenOption], elementNumber);
+                        continue;
+                    }
+                    rehighlightForLoad(options, chosenOption, -1, elementNumber);
                 }
 
                 if (key != null && key.getKind() == Key.Kind.Enter) {
@@ -394,6 +445,25 @@ public class Menu implements Runnable{
 
             return;
         }
+    }
+
+    private void printLoadPage(int pageNumber, int elementNumber, String[] options, int pageCount) {
+
+        writeOut("Press Escape to get back | Page " + pageNumber + '\\' + pageCount +  " \u21c4", 0);
+
+        for (int i = (pageNumber - 1)*elementNumber + 1; i <= pageNumber*elementNumber; i++) {
+
+            int sub = (pageNumber - 1)*elementNumber;
+
+            writeOut("                ", i - sub);
+
+            if (i < options.length) {
+
+                writeOut(options[i], i - sub);
+
+            }
+        }
+
     }
 
     public void loadLevel(Properties properties) {

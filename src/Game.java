@@ -1,3 +1,5 @@
+
+
 import com.googlecode.lanterna.TerminalFacade;
 import com.googlecode.lanterna.input.Key;
 import com.googlecode.lanterna.terminal.Terminal;
@@ -248,7 +250,7 @@ public class Game implements Terminal.ResizeListener {
         this.player = player;
     }
 
-    public static void main (String[] arg) {
+    public static void main (String[] args) {
         Game game = new Game();
         game.go();
     }
