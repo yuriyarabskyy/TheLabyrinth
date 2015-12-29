@@ -8,11 +8,9 @@ import java.util.List;
 public class DynamicObstacleController implements Runnable {
 
     private Game   game;
-    private Pauser pauser;
 
-    public DynamicObstacleController(Game game, Pauser pauser) {
+    public DynamicObstacleController(Game game) {
         this.game   = game;
-        this.pauser = pauser;
     }
 
     public void run() {
@@ -26,7 +24,7 @@ public class DynamicObstacleController implements Runnable {
                 e.printStackTrace();
             }
 
-            if (!pauser.stop) {
+            if (!game.getPause()) {
 
                 for (DynamicObstacle obj : game.getDynobList()) obj.move(game.getField(), game.getOffset(), game.getPlayer(), game.getStats());
 

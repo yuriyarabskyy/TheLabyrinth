@@ -40,6 +40,8 @@ public class Game implements Terminal.ResizeListener {
 
     private List<DynamicObstacle> dynobList = new LinkedList<DynamicObstacle>();
 
+    private boolean pause = false;
+
 
     public Terminal getTerminal() {
         return terminal;
@@ -62,6 +64,8 @@ public class Game implements Terminal.ResizeListener {
         return startingPoint;
     }
 
+    public boolean getPause() { return pause; }
+
     public Field getField() {
         return field;
     }
@@ -73,12 +77,6 @@ public class Game implements Terminal.ResizeListener {
 
     public Stats getStats() {
         return stats;
-    }
-
-
-    public static void main(String[] args) {
-        Game game = new Game();
-        game.go();
     }
 
     public void setProperties(Properties properties) {
@@ -112,9 +110,7 @@ public class Game implements Terminal.ResizeListener {
 
         menu = new Menu(this);
 
-        Pauser pauser = new Pauser();
-
-        Thread dController = new Thread(new DynamicObstacleController(this, pauser));
+        Thread dController = new Thread(new DynamicObstacleController(this));
         dController.start();
 
         focusScreen(terminal.getTerminalSize(), player, startingPoint, field);
@@ -140,7 +136,7 @@ public class Game implements Terminal.ResizeListener {
                 Key key = terminal.readInput();
 
                 //for the dynamic objects
-                pauser.stop = false;
+                pause = false;
 
                 if (checkMove(player, key, startingPoint)) {
                     stats.redraw();
@@ -154,7 +150,7 @@ public class Game implements Terminal.ResizeListener {
 
                 }
             }
-            else pauser.stop = true;
+            else pause = true;
 
         }
 
@@ -250,6 +246,11 @@ public class Game implements Terminal.ResizeListener {
     public void setPlayer(Player player) {
 
         this.player = player;
+    }
+
+    public static void main (String[] arg) {
+        Game game = new Game();
+        game.go();
     }
 
 }
