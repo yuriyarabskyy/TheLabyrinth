@@ -1,0 +1,2 @@
+Main-Class: Game
+Class-Path: lanterna-2.1.7.jar
