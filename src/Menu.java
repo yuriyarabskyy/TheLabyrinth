@@ -468,15 +468,26 @@ public class Menu implements Runnable{
 
     public void loadLevel(Properties properties) {
 
-        int health = Integer.parseInt(properties.getProperty("Health"));
+        int health = 3;
 
-        Coordinates playerCoord = new Coordinates(properties.getProperty("PlayerCoordinates"));
+        if (properties.containsKey("Health")) {
+            health = Integer.parseInt(properties.getProperty("Health"));
+            properties.remove("Health");
+        }
 
-        Coordinates offset = new Coordinates(properties.getProperty("Offset"));
+        Coordinates playerCoord = null;
 
-        properties.remove("Health");
-        properties.remove("PlayerCoordinates");
-        properties.remove("Offset");
+        if (properties.containsKey("PlayerCoordinates")) {
+            playerCoord = new Coordinates(properties.getProperty("PlayerCoordinates"));
+            properties.remove("PlayerCoordinates");
+        }
+
+        Coordinates offset = new Coordinates(0,0);
+
+        if (properties.containsKey("Offset")) {
+            offset = new Coordinates(properties.getProperty("Offset"));
+            properties.remove("Offset");
+        }
 
         List<DynamicObstacle> dynamicObstacleList = new LinkedList<>();
 
@@ -485,6 +496,9 @@ public class Menu implements Runnable{
         game.setProperties(properties);
 
         Field newField = new Field(game);
+        newField.drawBorder();
+
+        if (playerCoord == null) playerCoord = newField.getEntrance();
 
         Player newPlayer = new Player(game, playerCoord, health);
 
@@ -574,6 +588,7 @@ public class Menu implements Runnable{
 
         }
 
+        game.getField().drawBorder();
         game.getField().redraw();
         game.getPlayer().redraw();
         game.getStats().redraw();
