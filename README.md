@@ -1,2 +1,4 @@
 # Labyrinth-game
-first semester university project
+First semester university project.
+
+A jar file (Labyrinth) can be found in the classes directory.
