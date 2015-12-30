@@ -12,6 +12,8 @@ public class Player implements Damagable {
 
     private Game game;
 
+    private boolean won = false;
+
     public Player(Game game, Coordinates coordinates, int health) {
 
         this.game = game;
@@ -20,6 +22,11 @@ public class Player implements Damagable {
 
         this.health = health;
 
+    }
+
+    public boolean isWon() {
+
+        return won;
     }
 
     public Player(Game game, Coordinates coordinates) {
@@ -45,6 +52,10 @@ public class Player implements Damagable {
 
         }
 
+    }
+
+    public void setWon(boolean won) {
+        this.won = won;
     }
 
     public void move(Coordinates vector, Coordinates offset) {
@@ -82,7 +93,10 @@ public class Player implements Damagable {
 
                 if (map[x][y] instanceof Exit && game.getField().getKeysLeft() == 0) {
 
-                    //TODO
+                    game.getMenu().drawFrame();
+                    game.getMenu().clearMenu();
+                    game.getMenu().writeOut("You just won the game!", 2);
+                    won = true;
 
                 }
 
@@ -120,7 +134,15 @@ public class Player implements Damagable {
     }
 
     public void damage() {
+
         health--;
+
+        if (health == 0) {
+            game.getMenu().drawFrame();
+            game.getMenu().clearMenu();
+            game.getMenu().writeOut("You just lost..", 2);
+        }
+
     }
 
 }

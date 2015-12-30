@@ -542,6 +542,8 @@ public class Menu implements Runnable{
 
         Terminal terminal = game.getTerminal();
 
+        chosenOption = 1;
+
         synchronized (terminal) {
 
             draw();
@@ -571,12 +573,13 @@ public class Menu implements Runnable{
             }
 
             if (key != null && key.getKind() == Key.Kind.Enter) {
-                if (chosenOption == 1) break;
+                if (chosenOption == 1) {
+                    if (Integer.parseInt(game.getPlayer().getHealth()) == 0) continue;
+                    break;
+                }
                 //exit the game
                 if (chosenOption == options.length - 1) {
-                    do {
-                        game.getPlayer().damage();
-                    } while (Integer.parseInt(game.getPlayer().getHealth()) > 0);
+                    game.setCloseGame(true);
                     break;
                 }
                 choose(chosenOption);

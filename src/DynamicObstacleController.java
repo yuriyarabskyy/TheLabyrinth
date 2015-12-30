@@ -17,7 +17,7 @@ public class DynamicObstacleController implements Runnable {
     public void run() {
 
         //TODO Change to get methods
-        while (Integer.parseInt(game.getPlayer().getHealth()) > 0) {
+        while (!game.isCloseGame()) {
 
             try {
                 Thread.sleep(200);

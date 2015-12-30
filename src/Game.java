@@ -43,6 +43,11 @@ public class Game implements Terminal.ResizeListener {
 
     private boolean pause = false;
 
+    private boolean closeGame = false;
+
+    public void setCloseGame(boolean closeGame) {
+        this.closeGame = closeGame;
+    }
 
     public Terminal getTerminal() {
         return terminal;
@@ -82,6 +87,11 @@ public class Game implements Terminal.ResizeListener {
 
     public void setProperties(Properties properties) {
         this.properties = properties;
+    }
+
+
+    public boolean isCloseGame() {
+        return closeGame;
     }
 
     public void go() {
@@ -124,7 +134,7 @@ public class Game implements Terminal.ResizeListener {
 
         stats.redraw();
 
-        while (Integer.parseInt(player.getHealth()) > 0) {
+        while (!closeGame) {
 
             try {
                 Thread.sleep(50);
@@ -132,7 +142,28 @@ public class Game implements Terminal.ResizeListener {
                 e.printStackTrace();
             }
 
-            if (menuController == null || !menuController.isAlive()) {
+            if (player.isWon() && (menuController == null || !menuController.isAlive())) {
+
+                Key key = terminal.readInput();
+                if (key != null) {
+                    menuController = new Thread(menu);
+                    menuController.start();
+                }
+
+            }
+
+            if (Integer.parseInt(player.getHealth()) == 0 && (menuController == null || !menuController.isAlive())) {
+
+                Key key = terminal.readInput();
+
+                if (key != null) {
+                    menuController = new Thread(menu);
+                    menuController.start();
+                }
+
+            }
+
+            if (Integer.parseInt(player.getHealth()) > 0 && !player.isWon() && ( menuController == null || !menuController.isAlive())) {
 
                 Key key = terminal.readInput();
 
