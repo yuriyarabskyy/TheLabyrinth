@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class DynamicObstacleController implements Runnable {
 
-    private Game   game;
+    private Game game;
 
     public DynamicObstacleController(Game game) {
         this.game   = game;
@@ -16,7 +16,6 @@ public class DynamicObstacleController implements Runnable {
 
     public void run() {
 
-        //TODO Change to get methods
         while (!game.isCloseGame()) {
 
             try {

@@ -68,6 +68,7 @@ public class Field {
             map[coord.getX()][coord.getY()] = obj;
 
         }
+        //if the field is null, it means there's nothing on it
 
     }
 

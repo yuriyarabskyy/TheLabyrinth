@@ -13,7 +13,7 @@ import java.util.Properties;
 public class Menu implements Runnable{
 
     private static String[] options = {"MENU", "CONTINUE", "DOCUMENTATION", "SAVE LEVEL", "LOAD LEVEL", "EXIT"};
-
+    //width and height are later dynamically calculated from the window size
     private int width = 0, height = 0;
 
     private Coordinates startRect = null;
@@ -21,40 +21,45 @@ public class Menu implements Runnable{
     private int chosenOption = 1;
 
     private Game game;
-
+    //saved levels are loaded from a properties file into a list
     private List<String> savedLevels = new LinkedList<>();
-
+    //if kill, then close the menu
     private boolean kill = false;
 
     public Menu(Game game) {
-        this.game     = game;
+        this.game = game;
     }
 
+    //draws the menu window
     public void draw() {
 
         Terminal terminal = game.getTerminal();
 
-        width  = terminal.getTerminalSize().getColumns() - 2;
-        height = terminal.getTerminalSize().getRows() - 5;
+        synchronized (game.getTerminal()) {
 
-        startRect = new Coordinates((int)(width*0.3),(int)(height*0.25));
+            width = terminal.getTerminalSize().getColumns() - 2;
+            height = terminal.getTerminalSize().getRows() - 5;
 
-        width  -= 2*startRect.getX();
-        height -= 2*startRect.getY();
+            startRect = new Coordinates((int) (width * 0.3), (int) (height * 0.25));
 
-        drawFrame();
-        clearMenu();
+            width -= 2 * startRect.getX();
+            height -= 2 * startRect.getY();
 
-        //drawing the line with the menu
-        terminal.applyBackgroundColor(Terminal.Color.BLUE);
-        terminal.moveCursor(startRect.getX() + 1,startRect.getY() + 1);
-        for (int i = startRect.getX() + 1; i < startRect.getX() + width; i++) {
-            terminal.putCharacter(' ');
+            drawFrame();
+            clearMenu();
+
+            //drawing the line with the menu
+            terminal.applyBackgroundColor(Terminal.Color.BLUE);
+            terminal.moveCursor(startRect.getX() + 1, startRect.getY() + 1);
+            for (int i = startRect.getX() + 1; i < startRect.getX() + width; i++) {
+                terminal.putCharacter(' ');
+            }
+            writeOut(options[0], 0);
+            //end of the line
+
+            drawOptions();
+
         }
-        writeOut(options[0], 0);
-        //end of the line
-
-        drawOptions();
 
     }
 
@@ -136,7 +141,7 @@ public class Menu implements Runnable{
         writeOut(options[index - direction], index - direction);
     }
 
-    //TODO
+    //this method is used for the load menu option
     public void rehighlightForLoad(String[] options, int index, int direction, int elementNumber) {
 
         int index2 = index % elementNumber;
@@ -158,7 +163,7 @@ public class Menu implements Runnable{
         writeOut(options[index - direction], index2 - direction);
     }
 
-    ///after clicking enter
+    ///after clicking enter and choosing an option
     public void choose(int index) {
         Terminal terminal = game.getTerminal();
         //Documentation
@@ -191,7 +196,7 @@ public class Menu implements Runnable{
 
             writeOut("Name your saved level", 1);
 
-            String blank = "                    ";
+            String blank = "                      ";
             terminal.applyBackgroundColor(Terminal.Color.CYAN);
             writeOut(blank, 2);
 
@@ -266,6 +271,8 @@ public class Menu implements Runnable{
             storeProperties(propsForStore);
 
             //saving the levels details
+            //saved levels list is stored in levels.properties file
+            //if the file doesn't exist, it gets created
             try {
 
                 propsForStore.store(new FileOutputStream(new File("src/" + file + ".properties")), "Saved Level");
@@ -443,10 +450,10 @@ public class Menu implements Runnable{
 
             draw();
 
-            return;
         }
     }
 
+    //used for load option window, prints out the pageNumber page of the saved levels list
     private void printLoadPage(int pageNumber, int elementNumber, String[] options, int pageCount) {
 
         writeOut("Press Escape to get back | Page " + pageNumber + '\\' + pageCount +  " \u21c4", 0);
@@ -455,7 +462,7 @@ public class Menu implements Runnable{
 
             int sub = (pageNumber - 1)*elementNumber;
 
-            writeOut("                ", i - sub);
+            writeOut("                       ", i - sub);
 
             if (i < options.length) {
 
@@ -466,6 +473,7 @@ public class Menu implements Runnable{
 
     }
 
+    //load level from a chosen properties object
     public void loadLevel(Properties properties) {
 
         int health = 3;
@@ -507,9 +515,10 @@ public class Menu implements Runnable{
 
     }
 
+    //save the current level and its properties into a properties object
     public void storeProperties(Properties properties) {
 
-        properties.setProperty("Health", game.getPlayer().getHealth());
+        properties.setProperty("Health", Integer.toString(game.getPlayer().getHealth()));
         properties.setProperty("PlayerCoordinates", game.getPlayer().getCoordinates().toString());
         properties.setProperty("Offset", game.getOffset().toString());
 
@@ -538,17 +547,14 @@ public class Menu implements Runnable{
 
     }
 
+    //get's called when the respective thread is started
     public void run() {
 
         Terminal terminal = game.getTerminal();
 
         chosenOption = 1;
 
-        synchronized (terminal) {
-
-            draw();
-
-        }
+        draw();
 
         kill = false;
 
@@ -574,7 +580,7 @@ public class Menu implements Runnable{
 
             if (key != null && key.getKind() == Key.Kind.Enter) {
                 if (chosenOption == 1) {
-                    if (Integer.parseInt(game.getPlayer().getHealth()) == 0) continue;
+                    if (game.getPlayer().getHealth() == 0) continue;
                     break;
                 }
                 //exit the game

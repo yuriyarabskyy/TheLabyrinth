@@ -3,5 +3,5 @@
  */
 
 public interface Damagable {
-    public void damage();
+    void damage();
 }

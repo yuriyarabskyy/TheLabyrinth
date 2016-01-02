@@ -24,11 +24,12 @@ public class Player implements Damagable {
 
     }
 
+    //tells us if the player has won
     public boolean isWon() {
-
         return won;
     }
 
+    //if the health is not given, starts the game with one life
     public Player(Game game, Coordinates coordinates) {
         this(game, coordinates, 1);
     }
@@ -54,14 +55,13 @@ public class Player implements Damagable {
 
     }
 
-    public void setWon(boolean won) {
-        this.won = won;
-    }
-
-    public void move(Coordinates vector, Coordinates offset) {
+    //makes a move after checking if it's possible
+    public void move(Coordinates vector) {
 
         Terminal terminal = game.getTerminal();
 
+        //other threads have to wait till the player has finished moving
+        //to be able to draw their objects
         synchronized (terminal) {
 
             Coordinates oldCoord = coordinates.clone();
@@ -121,12 +121,12 @@ public class Player implements Damagable {
 
     }
 
-    public String getHealth() {
-        return Integer.toString(health);
+    public int getHealth() {
+        return health;
     }
 
-    public String getKeysLeft() {
-        return Integer.toString(game.getField().getKeysLeft());
+    public int getKeysLeft() {
+        return game.getField().getKeysLeft();
     }
 
     public Coordinates getCoordinates() {
@@ -136,6 +136,9 @@ public class Player implements Damagable {
     public void damage() {
 
         health--;
+
+        game.getStats().redraw();
+        redraw();
 
         if (health == 0) {
             game.getMenu().drawFrame();

@@ -13,6 +13,12 @@ import java.util.Properties;
 /**
  * Created by yuriyarabskyy on 25/12/15.
  */
+
+/**
+ * main class, which controls the whole flow of the game
+ * implements a listener, so when the window is resized
+ * the game gets automatically adjusted to the new size
+ */
 public class Game implements Terminal.ResizeListener {
 
     private static final Coordinates UP    = new Coordinates(0,-1);
@@ -36,66 +42,57 @@ public class Game implements Terminal.ResizeListener {
 
     //where we start drawing the map
     public Coordinates startingPoint = new Coordinates(0,0);
-
+    //a thread which is activated every time a menu is called
     private Thread menuController = null;
-
+    //a list of dynamic obstacles
     private List<DynamicObstacle> dynobList = new LinkedList<DynamicObstacle>();
-
+    //if the menu is opened, pause is activated
     private boolean pause = false;
-
+    //if the game is about to be closed
     private boolean closeGame = false;
 
-    public void setCloseGame(boolean closeGame) {
-        this.closeGame = closeGame;
-    }
 
-    public Terminal getTerminal() {
+    //getters
+    public Terminal   getTerminal() {
         return terminal;
     }
-
     public Properties getProperties() {
         return properties;
     }
-
-    public Menu getMenu() {
+    public Menu       getMenu() {
         return menu;
     }
-
     public List<DynamicObstacle> getDynobList() {
         return dynobList;
     }
-
-    public Coordinates getOffset() {
-
-        return startingPoint;
-    }
-
+    public Coordinates getOffset() { return startingPoint; }
     public boolean getPause() { return pause; }
-
     public Field getField() {
         return field;
     }
-
-    public Player getPlayer() {
-
-        return player;
-    }
-
+    public Player getPlayer() { return player; }
     public Stats getStats() {
         return stats;
     }
 
+    //setters
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
-
-
-    public boolean isCloseGame() {
-        return closeGame;
+    public void setCloseGame(boolean closeGame) { this.closeGame = closeGame; }
+    public void setField(Field field) {
+        this.field = field;
     }
+    public void setStartingPoint(Coordinates startingPoint) {
+        this.startingPoint = startingPoint;
+    }
+    public void setDynobList(List<DynamicObstacle> dynobList) { this.dynobList = dynobList; }
+    public void setPlayer(Player player) { this.player = player; }
 
+
+    //that's where the logic of the game is situated at
     public void go() {
-
+        //initializing all variables
         properties = new Properties();
 
         try {
@@ -123,28 +120,30 @@ public class Game implements Terminal.ResizeListener {
 
         Thread dController = new Thread(new DynamicObstacleController(this));
         dController.start();
+        //end of the initialization
 
+        //focusing the window on the player and drawing everything
         focusScreen(terminal.getTerminalSize(), player, startingPoint, field);
-
         field.drawBorder();
-
         field.redraw();
-
         player.redraw();
-
         stats.redraw();
 
+        //game loop
         while (!closeGame) {
 
+            //time till the next possible move
             try {
                 Thread.sleep(50);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+            //if player won
             if (player.isWon() && (menuController == null || !menuController.isAlive())) {
 
                 Key key = terminal.readInput();
+
                 if (key != null) {
                     menuController = new Thread(menu);
                     menuController.start();
@@ -152,7 +151,8 @@ public class Game implements Terminal.ResizeListener {
 
             }
 
-            if (Integer.parseInt(player.getHealth()) == 0 && (menuController == null || !menuController.isAlive())) {
+            //if player lost
+            if (player.getHealth() == 0 && (menuController == null || !menuController.isAlive())) {
 
                 Key key = terminal.readInput();
 
@@ -163,25 +163,32 @@ public class Game implements Terminal.ResizeListener {
 
             }
 
-            if (Integer.parseInt(player.getHealth()) > 0 && !player.isWon() && ( menuController == null || !menuController.isAlive())) {
-
+            //if the game is still on and menu is closed
+            if (player.getHealth() > 0 && !player.isWon() && ( menuController == null || !menuController.isAlive())) {
+                //read next key
                 Key key = terminal.readInput();
 
                 //for the dynamic objects
                 pause = false;
 
+                //make a move if a respective key was pressed
+                //and if a move was made, redraw the stats just to make sure
+                //and focus the screen if the player has reached the border of the window
                 if (checkMove(player, key, startingPoint)) {
                     stats.redraw();
                     focusScreen(terminal.getTerminalSize(), player, startingPoint, field);
                 }
 
+                //open the menu on escape
                 if (key != null && key.getKind() == Key.Kind.Escape) {
 
                     menuController = new Thread(menu);
                     menuController.start();
 
                 }
+
             }
+            //else if menu is open or the end of the game, pause all the moving objects
             else pause = true;
 
         }
@@ -190,18 +197,23 @@ public class Game implements Terminal.ResizeListener {
 
     }
 
+    public boolean isCloseGame() { return closeGame; }
+
+    //check and make a move
     private static boolean checkMove(Player player, Key key, Coordinates offset) {
 
         if (key != null) {
-            if (key.getKind() == Key.Kind.ArrowRight) player.move(RIGHT,offset);
-            if (key.getKind() == Key.Kind.ArrowLeft)  player.move(LEFT, offset);
-            if (key.getKind() == Key.Kind.ArrowUp)    player.move(UP,   offset);
-            if (key.getKind() == Key.Kind.ArrowDown)  player.move(DOWN, offset);
+            if (key.getKind() == Key.Kind.ArrowRight) player.move(RIGHT);
+            if (key.getKind() == Key.Kind.ArrowLeft)  player.move(LEFT);
+            if (key.getKind() == Key.Kind.ArrowUp)    player.move(UP);
+            if (key.getKind() == Key.Kind.ArrowDown)  player.move(DOWN);
             return true;
         }
+
         return false;
     }
 
+    //if resized, redraw all the objects
     public void onResized(TerminalSize newSize) {
 
         field.drawBorder();
@@ -219,6 +231,8 @@ public class Game implements Terminal.ResizeListener {
 
     }
 
+    //verifying if the player is in the borders of the window
+    //and changing the offset of the screen if necessary
     public static void focusScreen(TerminalSize terminalSize, Player player, Coordinates startingPoint, Field field) {
 
         boolean changed = false;
@@ -260,26 +274,10 @@ public class Game implements Terminal.ResizeListener {
             field.redraw();
             player.redraw();
         }
+
     }
 
-    public void setField(Field field) {
-        this.field = field;
-    }
-
-    public void setStartingPoint(Coordinates startingPoint) {
-        this.startingPoint = startingPoint;
-    }
-
-    public void setDynobList(List<DynamicObstacle> dynobList) {
-
-        this.dynobList = dynobList;
-    }
-
-    public void setPlayer(Player player) {
-
-        this.player = player;
-    }
-
+    //starts up the game
     public static void main (String[] args) {
         Game game = new Game();
         game.go();

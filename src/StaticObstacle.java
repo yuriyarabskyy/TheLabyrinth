@@ -6,12 +6,8 @@ import com.googlecode.lanterna.terminal.Terminal;
  */
 public class StaticObstacle extends Obstacle {
 
-    Terminal terminal;
-
     public StaticObstacle(Terminal terminal) {
-
-        this.terminal = terminal;
-
+        super(terminal, new Coordinates(0,0));
     }
 
     public void show() {
