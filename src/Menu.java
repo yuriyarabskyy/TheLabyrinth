@@ -28,6 +28,17 @@ public class Menu implements Runnable{
 
     public Menu(Game game) {
         this.game = game;
+        calculateFrame();
+    }
+
+    public void calculateFrame() {
+        width = game.getTerminal().getTerminalSize().getColumns() - 2;
+        height = game.getTerminal().getTerminalSize().getRows() - 5;
+
+        startRect = new Coordinates((int) (width * 0.3), (int) (height * 0.25));
+
+        width -= 2 * startRect.getX();
+        height -= 2 * startRect.getY();
     }
 
     //draws the menu window
@@ -36,14 +47,6 @@ public class Menu implements Runnable{
         Terminal terminal = game.getTerminal();
 
         synchronized (game.getTerminal()) {
-
-            width = terminal.getTerminalSize().getColumns() - 2;
-            height = terminal.getTerminalSize().getRows() - 5;
-
-            startRect = new Coordinates((int) (width * 0.3), (int) (height * 0.25));
-
-            width -= 2 * startRect.getX();
-            height -= 2 * startRect.getY();
 
             drawFrame();
             clearMenu();
@@ -547,7 +550,7 @@ public class Menu implements Runnable{
 
     }
 
-    //get's called when the respective thread is started
+    //get's called when the responding thread get's started
     public void run() {
 
         Terminal terminal = game.getTerminal();

@@ -26,7 +26,7 @@ public class Game implements Terminal.ResizeListener {
     private static final Coordinates LEFT  = new Coordinates(-1,0);
     private static final Coordinates RIGHT = new Coordinates(1, 0);
 
-    public static String loadFile = "src/level.properties";
+    public static String loadFile = "src/level_big_dense.properties";
 
     private Properties properties = null;
 
@@ -223,6 +223,8 @@ public class Game implements Terminal.ResizeListener {
         player.redraw();
 
         stats.redraw();
+
+        menu.calculateFrame();
 
         if (menuController != null && menuController.isAlive())
             menu.draw();

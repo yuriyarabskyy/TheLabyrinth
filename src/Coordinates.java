@@ -70,9 +70,26 @@ public class Coordinates {
         return this;
     }
 
-    public boolean equals(Coordinates coord) {
-        if (x == coord.x && y == coord.y) return true;
+    @Override
+    public boolean equals(Object coord) {
+
+        if (!(coord instanceof Coordinates)) return false;
+
+        Coordinates coordinates = (Coordinates) coord;
+
+        if (x == coordinates.x && y == coordinates.y) return true;
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = x;
+        result = 31 * result + y;
+        return result;
+    }
+
+    public double distTo(Coordinates coord) {
+        return Math.sqrt((coord.getX() - x)*(coord.getX() - x)+(coord.getY() - y)*(coord.getY() - y));
     }
 
     @Override
