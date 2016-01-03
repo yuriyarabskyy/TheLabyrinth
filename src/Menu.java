@@ -100,12 +100,14 @@ public class Menu implements Runnable{
 
         Terminal terminal = game.getTerminal();
 
-        terminal.applyBackgroundColor(Terminal.Color.WHITE);
-        //clear inside the frame
-        for (int i = startRect.getX() + 1; i < startRect.getX() + width; i++) {
-            for (int j = startRect.getY() + 1; j < startRect.getY() + height; j++) {
-                terminal.moveCursor(i,j);
-                terminal.putCharacter(' ');
+        synchronized (game.getTerminal()) {
+            terminal.applyBackgroundColor(Terminal.Color.WHITE);
+            //clear inside the frame
+            for (int i = startRect.getX() + 1; i < startRect.getX() + width; i++) {
+                for (int j = startRect.getY() + 1; j < startRect.getY() + height; j++) {
+                    terminal.moveCursor(i, j);
+                    terminal.putCharacter(' ');
+                }
             }
         }
     }

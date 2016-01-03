@@ -152,7 +152,7 @@ public class Game implements Terminal.ResizeListener {
             }
 
             //if player lost
-            if (player.getHealth() == 0 && (menuController == null || !menuController.isAlive())) {
+            if (player.getHealth() <= 0 && (menuController == null || !menuController.isAlive())) {
 
                 Key key = terminal.readInput();
 
