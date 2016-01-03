@@ -58,11 +58,9 @@ public class Player implements Damagable {
     //makes a move after checking if it's possible
     public void move(Coordinates vector) {
 
-        Terminal terminal = game.getTerminal();
-
         //other threads have to wait till the player has finished moving
         //to be able to draw their objects
-        synchronized (terminal) {
+        synchronized (game.getTerminal()) {
 
             Coordinates oldCoord = coordinates.clone();
 

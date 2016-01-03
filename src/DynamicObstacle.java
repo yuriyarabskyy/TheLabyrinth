@@ -10,8 +10,10 @@ public class DynamicObstacle extends Obstacle{
 
     private static final Coordinates[] directions = {new Coordinates(1,0),new Coordinates(0,1),new Coordinates(-1,0),new Coordinates(0,-1)};
     private static final Character[] directionsCh = {'r','d','l','u'};
-    public static int    difficultyLevel = 50;
+    public static int    difficultyLevel = 11;
 
+
+    private int pathIndex = 0;
     private String pathToPlayer = "";
 
     public DynamicObstacle(Terminal terminal, Coordinates coordinates) {
@@ -30,41 +32,68 @@ public class DynamicObstacle extends Obstacle{
 
     }
 
-    public void move(Field field, Coordinates offset, Player player, Stats stats) {
-
-        synchronized (terminal) {
-
-            Coordinates coord;
+    public void move(Field field, Coordinates offset, Player player) {
 
             //calculating the relative x and y for the screen
             int x = coordinates.getX() - offset.getX() + 1;
             int y = coordinates.getY() - offset.getY() + 1;
 
-            if (onScreen(x, y))
-            drawField(x, y, Terminal.Color.BLUE);
+            boolean onScreen = onScreen(x, y);
 
+            if (!onScreen && pathToPlayer.isEmpty()) return;
+            synchronized (terminal) {
+                if (onScreen)
+                    drawField(x, y, Terminal.Color.BLUE);
+            }
             getNextCoordinate(player.getCoordinates(), field);
 
             x = coordinates.getX() - offset.getX() + 1;
             y = coordinates.getY() - offset.getY() + 1;
 
-            if (onScreen(x, y))
-            drawField(x, y, Terminal.Color.YELLOW);
+            synchronized (terminal) {
+                if (onScreen)
+                    drawField(x, y, Terminal.Color.YELLOW);
+            }
 
             tryHit(player);
-
-        }
 
     }
 
     //uses breadth-first search in its core to find the next move
     private void getNextCoordinate(Coordinates playerCoordinates, Field field) {
 
-        String pathBackUp = pathToPlayer;
+            String pathNew = "";
 
-        pathToPlayer = searchPath(playerCoordinates, field.getMap());
+            if (pathIndex > pathToPlayer.length() / 2 || pathToPlayer.isEmpty())
+                pathNew = searchPath(playerCoordinates, field.getMap());
 
-        if (pathToPlayer.isEmpty() && pathBackUp.isEmpty()) {
+            if (!pathNew.isEmpty()) {
+                pathToPlayer = pathNew;
+                pathIndex = 0;
+            }
+
+            if (!pathToPlayer.isEmpty() && pathIndex < pathToPlayer.length()) {
+                switch (pathToPlayer.charAt(pathIndex)) {
+                    case 'r':
+                        coordinates.add(directions[0]);
+                        break;
+                    case 'd':
+                        coordinates.add(directions[1]);
+                        break;
+                    case 'l':
+                        coordinates.add(directions[2]);
+                        break;
+                    case 'u':
+                        coordinates.add(directions[3]);
+                        break;
+                    default:
+                        coordinates.add(directions[0]);
+                }
+
+                pathIndex++;
+            }
+
+        else {
 
             double minDist = Double.MAX_VALUE;
             int minDir = 0;
@@ -83,19 +112,6 @@ public class DynamicObstacle extends Obstacle{
             }
 
             coordinates.add(directions[minDir]);
-        } else if (pathToPlayer.isEmpty()) moveWith(pathBackUp);
-            else {
-            moveWith(pathToPlayer);
-        }
-    }
-
-    private void moveWith(String path) {
-        switch (path.charAt(0)) {
-            case 'r' : coordinates.add(directions[0]); return;
-            case 'd' : coordinates.add(directions[1]); return;
-            case 'l' : coordinates.add(directions[2]); return;
-            case 'u' : coordinates.add(directions[3]); return;
-            default:   coordinates.add(directions[0]); return;
         }
     }
 

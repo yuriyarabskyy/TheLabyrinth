@@ -26,7 +26,7 @@ public class Game implements Terminal.ResizeListener {
     private static final Coordinates LEFT  = new Coordinates(-1,0);
     private static final Coordinates RIGHT = new Coordinates(1, 0);
 
-    public static String loadFile = "src/level_big_dense.properties";
+    public static String loadFile = "src/level.properties";
 
     private Properties properties = null;
 
