@@ -78,21 +78,23 @@ public class Menu implements Runnable{
 
     public void drawFrame() {
         Terminal terminal = game.getTerminal();
-        terminal.applyBackgroundColor(Terminal.Color.WHITE);
-        terminal.applyForegroundColor(Terminal.Color.BLACK);
-        //drawing the frame
-        terminal.moveCursor(startRect.getX(),startRect.getY());
-        for (int i = startRect.getX(); i <= startRect.getX() + width; i++) terminal.putCharacter('X');
-        terminal.moveCursor(startRect.getX(),startRect.getY()+height);
-        for (int i = startRect.getX(); i <= startRect.getX() + width; i++) terminal.putCharacter('X');
-        terminal.moveCursor(startRect.getX(),startRect.getY());
-        for (int i = startRect.getY() + 1; i <= startRect.getY() + height; i++) {
-            terminal.moveCursor(startRect.getX(),i);
-            terminal.putCharacter('X');
-        }
-        for (int i = startRect.getY() + 1; i <= startRect.getY() + height; i++) {
-            terminal.moveCursor(startRect.getX() + width,i);
-            terminal.putCharacter('X');
+        synchronized (game.getTerminal()) {
+            terminal.applyBackgroundColor(Terminal.Color.WHITE);
+            terminal.applyForegroundColor(Terminal.Color.BLACK);
+            //drawing the frame
+            terminal.moveCursor(startRect.getX(), startRect.getY());
+            for (int i = startRect.getX(); i <= startRect.getX() + width; i++) terminal.putCharacter('X');
+            terminal.moveCursor(startRect.getX(), startRect.getY() + height);
+            for (int i = startRect.getX(); i <= startRect.getX() + width; i++) terminal.putCharacter('X');
+            terminal.moveCursor(startRect.getX(), startRect.getY());
+            for (int i = startRect.getY() + 1; i <= startRect.getY() + height; i++) {
+                terminal.moveCursor(startRect.getX(), i);
+                terminal.putCharacter('X');
+            }
+            for (int i = startRect.getY() + 1; i <= startRect.getY() + height; i++) {
+                terminal.moveCursor(startRect.getX() + width, i);
+                terminal.putCharacter('X');
+            }
         }
     }
 
@@ -556,6 +558,7 @@ public class Menu implements Runnable{
     public void run() {
 
         Terminal terminal = game.getTerminal();
+
 
         chosenOption = 1;
 
