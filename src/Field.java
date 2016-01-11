@@ -48,7 +48,13 @@ public class Field {
         //filling up the map with objects from the properties
         for (Object key : game.getProperties().keySet()) {
 
-            Coordinates coord = new Coordinates(key);
+            Coordinates coord;
+
+            if (((String)key).matches("\\d+,\\d+")) {
+
+                coord = new Coordinates(key);
+
+            } else continue;
 
             int ind = Integer.parseInt(game.getProperties().getProperty(coord.toString()));
 
@@ -92,7 +98,7 @@ public class Field {
 
         terminal.clearScreen();
 
-        terminal.applyBackgroundColor(Terminal.Color.GREEN);
+        terminal.applyBackgroundColor(Terminal.Color.RED);
 
         terminal.moveCursor(0,0);
         for (int i = 0; i < terminal.getTerminalSize().getColumns(); i++)

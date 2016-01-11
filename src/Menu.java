@@ -176,11 +176,11 @@ public class Menu implements Runnable{
         //Documentation
         if (index == 2) {
             clearMenu();
-            writeOut("Green smiley - player", 0);
-            writeOut("Star - key", 1);
-            writeOut("Red - static obstacle", 2);
+            writeOut("White - player", 0);
+            writeOut("K - key", 1);
+            writeOut("Cyan - static obstacle", 2);
             writeOut("Yellow - dynamic obstacle", 3);
-            writeOut("A - exit", 4);
+            writeOut("Green - exit", 4);
             highlight("Back", 5);
 
             Key key = terminal.readInput();
@@ -485,6 +485,8 @@ public class Menu implements Runnable{
 
         int health = 3;
 
+        DynamicObstacle.coordinatesList.clear();
+
         if (properties.containsKey("Health")) {
             health = Integer.parseInt(properties.getProperty("Health"));
             properties.remove("Health");
@@ -559,6 +561,9 @@ public class Menu implements Runnable{
 
         Terminal terminal = game.getTerminal();
 
+        try {
+            Thread.sleep(50);
+        } catch (Exception e) { e.printStackTrace(); }
 
         chosenOption = 1;
 

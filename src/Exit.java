@@ -14,11 +14,9 @@ public class Exit implements Showable {
 
     public void show() {
 
-        terminal.applyForegroundColor(Terminal.Color.CYAN);
+        terminal.applyBackgroundColor(Terminal.Color.GREEN);
 
-        terminal.applyBackgroundColor(Terminal.Color.BLUE);
-
-        terminal.putCharacter('A');
+        terminal.putCharacter(' ');
 
     }
 

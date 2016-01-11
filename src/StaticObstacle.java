@@ -12,9 +12,7 @@ public class StaticObstacle extends Obstacle {
 
     public void show() {
 
-        terminal.applyForegroundColor(Terminal.Color.RED);
-
-        terminal.applyBackgroundColor(Terminal.Color.RED);
+        terminal.applyBackgroundColor(Terminal.Color.CYAN);
 
         terminal.putCharacter(' ');
 

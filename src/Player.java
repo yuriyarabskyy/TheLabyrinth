@@ -1,10 +1,12 @@
 
 import com.googlecode.lanterna.terminal.Terminal;
 
+import java.util.Timer;
+
 /**
  * Created by yuriyarabskyy on 25/12/15.
  */
-public class Player implements Damagable {
+public class Player {
 
     private int health;
 
@@ -13,6 +15,13 @@ public class Player implements Damagable {
     private Game game;
 
     private boolean won = false;
+
+    //if turned on for the next 2s after got hit
+    //I am using the timer to count the time
+    //the player turns red, when it's hit and during this time it's immortal
+    private boolean gotHit = false;
+
+    private Timer timer = new Timer(true);
 
     public Player(Game game, Coordinates coordinates, int health) {
 
@@ -45,11 +54,10 @@ public class Player implements Damagable {
 
             terminal.moveCursor(x, y);
 
-            terminal.applyForegroundColor(Terminal.Color.GREEN);
+            if (!gotHit) terminal.applyBackgroundColor(Terminal.Color.WHITE);
+            else terminal.applyBackgroundColor(Terminal.Color.RED);
 
-            terminal.applyBackgroundColor(Terminal.Color.BLUE);
-
-            terminal.putCharacter('\u263b');
+            terminal.putCharacter(' ');
 
         }
 
@@ -71,9 +79,9 @@ public class Player implements Damagable {
             int x = coordinates.getX();
             int y = coordinates.getY();
 
-            if (x >= 0 && y >= 0 && map[x][y] != null) {
+            if (x >= 0 && y >= 0 && x < map.length && y < map[0].length) {
 
-                if (map[x][y] instanceof Wall
+                if (map[x][y] != null && map[x][y] instanceof Wall
                         || map[x][y] instanceof Entrance
                         || (map[x][y] instanceof Exit && game.getField().getKeysLeft() > 0)) {
 
@@ -82,14 +90,14 @@ public class Player implements Damagable {
 
                 }
 
-                if (map[x][y] instanceof Key) {
+                if (map[x][y] != null && map[x][y] instanceof Key) {
 
                     map[x][y] = null;
                     game.getField().pickUpKey();
 
                 }
 
-                if (map[x][y] instanceof Exit && game.getField().getKeysLeft() == 0) {
+                if (map[x][y] != null && map[x][y] instanceof Exit && game.getField().getKeysLeft() == 0) {
 
                     game.getMenu().drawFrame();
                     game.getMenu().clearMenu();
@@ -98,7 +106,7 @@ public class Player implements Damagable {
 
                 }
 
-                if (map[x][y] instanceof Obstacle) {
+                if (((map[x][y] != null && map[x][y] instanceof Obstacle) || DynamicObstacle.coordinatesList.contains(coordinates)) && !gotHit) {
 
                     damage();
 
@@ -131,17 +139,28 @@ public class Player implements Damagable {
         return coordinates;
     }
 
+    public void setGotHit(boolean gotHit) { this.gotHit = gotHit; }
+
     public void damage() {
 
-        health--;
+        if (health > 0 && !gotHit) {
 
-        game.getStats().redraw();
-        redraw();
+            health--;
 
-        if (health == 0) {
-            game.getMenu().drawFrame();
-            game.getMenu().clearMenu();
-            game.getMenu().writeOut("You just lost..", 2);
+            gotHit = true;
+
+            timer.schedule(new DamagableSetter(this), 2000);
+
+            game.getStats().redraw();
+            redraw();
+
+            if (health == 0) {
+                game.setPause(true);
+                game.getMenu().drawFrame();
+                game.getMenu().clearMenu();
+                game.getMenu().writeOut("You just lost..", 2);
+            }
+
         }
 
     }

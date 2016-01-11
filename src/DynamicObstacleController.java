@@ -26,7 +26,13 @@ public class DynamicObstacleController implements Runnable {
 
             if (!game.getPause()) {
 
-                for (DynamicObstacle obj : game.getDynobList()) obj.move(game.getField(), game.getOffset(), game.getPlayer());
+                for (DynamicObstacle obj : game.getDynobList()) {
+
+                    if (game.getPause()) break;
+
+                    obj.move(game.getField(), game.getOffset(), game.getPlayer());
+
+                }
 
             }
 

@@ -88,6 +88,7 @@ public class Game implements Terminal.ResizeListener {
     }
     public void setDynobList(List<DynamicObstacle> dynobList) { this.dynobList = dynobList; }
     public void setPlayer(Player player) { this.player = player; }
+    public void setPause(boolean pause) { this.pause = pause; }
 
 
     //that's where the logic of the game is situated at
@@ -174,7 +175,7 @@ public class Game implements Terminal.ResizeListener {
                 //make a move if a respective key was pressed
                 //and if a move was made, redraw the stats just to make sure
                 //and focus the screen if the player has reached the border of the window
-                if (checkMove(player, key, startingPoint)) {
+                if (checkMove(player, key)) {
                     stats.redraw();
                     focusScreen(terminal.getTerminalSize(), player, startingPoint, field);
                 }
@@ -182,6 +183,7 @@ public class Game implements Terminal.ResizeListener {
                 //open the menu on escape
                 if (key != null && key.getKind() == Key.Kind.Escape) {
 
+                    pause = true;
                     menuController = new Thread(menu);
                     menuController.start();
 
@@ -200,7 +202,7 @@ public class Game implements Terminal.ResizeListener {
     public boolean isCloseGame() { return closeGame; }
 
     //check and make a move
-    private static boolean checkMove(Player player, Key key, Coordinates offset) {
+    private static boolean checkMove(Player player, Key key) {
 
         if (key != null) {
             if (key.getKind() == Key.Kind.ArrowRight) player.move(RIGHT);

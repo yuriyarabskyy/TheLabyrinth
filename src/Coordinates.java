@@ -29,7 +29,7 @@ public class Coordinates {
 
     //try construct a coordinate from an object assuming it's
     //a String representing a x and y separated by a comma
-    public Coordinates(Object object) {
+    public Coordinates(Object object) throws java.lang.NumberFormatException{
 
         String[] coords = ((String)object).split(",");
 

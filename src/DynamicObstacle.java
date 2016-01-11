@@ -8,6 +8,12 @@ import java.util.*;
  */
 public class DynamicObstacle extends Obstacle{
 
+    public static Set<Coordinates> coordinatesList;
+
+    static {
+        coordinatesList = new HashSet<>();
+    }
+
     private static final Coordinates[] directions = {new Coordinates(1,0),new Coordinates(0,1),new Coordinates(-1,0),new Coordinates(0,-1)};
     private static final Character[] directionsCh = {'r','d','l','u'};
     public static int    difficultyLevel = 11;
@@ -17,18 +23,20 @@ public class DynamicObstacle extends Obstacle{
     private String pathToPlayer = "";
 
     public DynamicObstacle(Terminal terminal, Coordinates coordinates) {
+
         super(terminal, coordinates);
+
+        coordinatesList.add(coordinates);
+
     }
 
     public void show() {
 
         terminal.moveCursor(coordinates.getX(), coordinates.getY());
 
-        terminal.applyForegroundColor(Terminal.Color.MAGENTA);
+        terminal.applyBackgroundColor(Terminal.Color.YELLOW);
 
-        terminal.applyBackgroundColor(Terminal.Color.BLUE);
-
-        terminal.putCharacter('D');
+        terminal.putCharacter(' ');
 
     }
 
@@ -41,17 +49,26 @@ public class DynamicObstacle extends Obstacle{
             boolean onScreen = onScreen(x, y);
 
             if (!onScreen && pathToPlayer.isEmpty()) return;
+
+            coordinatesList.remove(coordinates);
+
             synchronized (terminal) {
-                if (onScreen)
-                    drawField(x, y, Terminal.Color.BLUE);
+                if (onScreen) {
+                    if (player.getCoordinates().equals(coordinates))
+                        player.redraw();
+                    else
+                        drawField(x, y, Terminal.Color.BLUE);
+                }
             }
             getNextCoordinate(player.getCoordinates(), field);
 
             x = coordinates.getX() - offset.getX() + 1;
             y = coordinates.getY() - offset.getY() + 1;
 
+            coordinatesList.add(coordinates);
+
             synchronized (terminal) {
-                if (onScreen)
+                if (onScreen(x, y))
                     drawField(x, y, Terminal.Color.YELLOW);
             }
 
@@ -64,7 +81,8 @@ public class DynamicObstacle extends Obstacle{
 
             String pathNew = "";
 
-            if (pathIndex > pathToPlayer.length() / 2 || pathToPlayer.isEmpty())
+            if (pathIndex == pathToPlayer.length() / 2 || pathIndex == pathToPlayer.length() * 0.25 || pathToPlayer.isEmpty()
+                    || pathIndex == pathToPlayer.length() * 0.75 || pathIndex >= pathToPlayer.length())
                 pathNew = searchPath(playerCoordinates, field.getMap());
 
             if (!pathNew.isEmpty()) {
@@ -138,9 +156,13 @@ public class DynamicObstacle extends Obstacle{
 
         if (queue.isEmpty()) return "";
 
+        //if the player could not be found choose a random path
+        int randomIndex = difficultyLevel*200 - (int) (Math.random() * 1000) - 500;
+        String randomRoute = "";
+
         for (int i = 0; i < difficultyLevel*200; i++) {
 
-            if (queue.isEmpty()) return "";
+            if (queue.isEmpty()) return randomRoute;
 
             Pair next = queue.remove();
 
@@ -157,6 +179,8 @@ public class DynamicObstacle extends Obstacle{
                     queue.add(pair);
                     visitedCoords.add(vect);
 
+                    if (i >= randomIndex && randomRoute.isEmpty()) randomRoute = next.path;
+
                 }
 
             }
@@ -164,7 +188,7 @@ public class DynamicObstacle extends Obstacle{
 
         }
 
-        return "";
+        return randomRoute;
 
     }
 

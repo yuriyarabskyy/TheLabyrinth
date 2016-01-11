@@ -14,11 +14,11 @@ public class Key implements Showable{
 
     public void show() {
 
-        terminal.applyForegroundColor(Terminal.Color.YELLOW);
+        terminal.applyForegroundColor(Terminal.Color.WHITE);
 
-        terminal.applyBackgroundColor(Terminal.Color.BLUE);
+        terminal.applyBackgroundColor(Terminal.Color.MAGENTA);
 
-        terminal.putCharacter('\u272A');
+        terminal.putCharacter('K');
 
     }
 
