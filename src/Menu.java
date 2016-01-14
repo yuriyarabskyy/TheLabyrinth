@@ -19,17 +19,27 @@ public class Menu implements Runnable{
     private Coordinates startRect = null;
 
     private int chosenOption = 1;
+    private boolean isOptionChosen = false;
 
     private Game game;
     //saved levels are loaded from a properties file into a list
     private List<String> savedLevels = new LinkedList<>();
     //if kill, then close the menu
     private boolean kill = false;
+    private final String blank = "                      ";
+
+    private int loadLevelsCount = 0;
+    private int loadLevelChosenOption = 1;
+    private int loadLevelPageNumber = 1;
+    private String[] loadLevelOptions;
 
     public Menu(Game game) {
         this.game = game;
         calculateFrame();
     }
+
+    public int getChosenOption() { return chosenOption; }
+
 
     public void calculateFrame() {
         width = game.getTerminal().getTerminalSize().getColumns() - 2;
@@ -40,6 +50,8 @@ public class Menu implements Runnable{
         width -= 2 * startRect.getX();
         height -= 2 * startRect.getY();
     }
+
+    public boolean isOptionChosen() { return isOptionChosen; }
 
     //draws the menu window
     public void draw() {
@@ -170,294 +182,338 @@ public class Menu implements Runnable{
         writeOut(options[index - direction], index2 - direction);
     }
 
-    ///after clicking enter and choosing an option
-    public void choose(int index) {
+    public void drawDocumentation() {
+
+        clearMenu();
+        drawFrame();
+        writeOut("White - player", 0);
+        writeOut("K - key", 1);
+        writeOut("Cyan - static obstacle", 2);
+        writeOut("Yellow - dynamic obstacle", 3);
+        writeOut("Green - exit", 4);
+        highlight("Back", 5);
+
+    }
+
+    private void controlDocumentation() {
+
         Terminal terminal = game.getTerminal();
-        //Documentation
-        if (index == 2) {
-            clearMenu();
-            writeOut("White - player", 0);
-            writeOut("K - key", 1);
-            writeOut("Cyan - static obstacle", 2);
-            writeOut("Yellow - dynamic obstacle", 3);
-            writeOut("Green - exit", 4);
-            highlight("Back", 5);
 
-            Key key = terminal.readInput();
+        Key key = terminal.readInput();
 
-            while (key == null || key.getKind() != Key.Kind.Enter) {
-                try {
-                    Thread.sleep(50);
-                } catch (Exception e) { e.printStackTrace(); }
-                key = terminal.readInput();
+        while (key == null || key.getKind() != Key.Kind.Enter) {
+            try {
+                Thread.sleep(50);
+            } catch (Exception e) { e.printStackTrace(); }
+            key = terminal.readInput();
+        }
+
+        draw();
+
+    }
+
+    public void drawSaveMenu() {
+
+        Terminal terminal = game.getTerminal();
+
+        //organizing the view
+        clearMenu();
+        drawFrame();
+
+        writeOut("Name your saved level", 1);
+
+        terminal.applyBackgroundColor(Terminal.Color.CYAN);
+        writeOut(blank, 2);
+
+        writeOut("SAVE", 3);
+
+        terminal.moveCursor(calculateX(), calculateY());
+        terminal.setCursorVisible(true);
+        //end of the organization
+
+    }
+
+    //for the save menu
+    private int calculateX() { return startRect.getX() + width/2 + 1 - blank.length()/2; }
+    private int calculateY() { return startRect.getY() + 5; }
+
+    private void controlSavedMenu() {
+
+        Terminal terminal = game.getTerminal();
+
+        String file = "";
+
+        Key key = terminal.readInput();
+
+        while (file.isEmpty() || key == null || key.getKind() != Key.Kind.Enter) {
+
+            try {
+                Thread.sleep(50);
+            } catch (Exception e) { e.printStackTrace(); }
+
+            key = terminal.readInput();
+
+            if (key != null && key.getKind() == Key.Kind.NormalKey) {
+
+                if (file.length() == blank.length() - 1
+                        || !Character.toString(key.getCharacter()).matches("([a-z])|([A-Z])|\\d")) continue;
+
+                if (file.isEmpty()) {
+                    highlight("SAVE", 3);
+                }
+
+                terminal.moveCursor(calculateX() + file.length(), calculateY());
+                terminal.applyBackgroundColor(Terminal.Color.CYAN);
+                terminal.putCharacter(key.getCharacter());
+
+                file += key.getCharacter();
             }
 
-            draw();
+            if (key != null && key.getKind() == Key.Kind.Backspace) {
 
-            return;
+                if (file.isEmpty()) continue;
+
+                if (file.length() == 1) {
+                    terminal.applyBackgroundColor(Terminal.Color.WHITE);
+                    writeOut("SAVE", 3);
+                }
+
+                file = file.substring(0, file.length() - 1);
+
+                terminal.applyBackgroundColor(Terminal.Color.CYAN);
+                terminal.moveCursor(calculateX() + file.length(), calculateY());
+                terminal.putCharacter(' ');
+                terminal.moveCursor(calculateX() + file.length(), calculateY());
+
+            }
+
+            if (key != null && key.getKind() == Key.Kind.Escape) {
+                terminal.setCursorVisible(false);
+                draw();
+                return;
+            }
+
         }
-        //Save level
-        if (index == 3) {
-            //organizing the view
-            clearMenu();
 
-            writeOut("Name your saved level", 1);
+        //adding file to the saved ones
+        if (!savedLevels.contains(file)) savedLevels.add(file);
 
-            String blank = "                      ";
-            terminal.applyBackgroundColor(Terminal.Color.CYAN);
-            writeOut(blank, 2);
+        Properties propsForStore = new Properties();
+        storeProperties(propsForStore);
 
-            writeOut("SAVE", 3);
+        //saving the levels details
+        //saved levels list is stored in levels.properties file
+        //if the file doesn't exist, it gets created
+        try {
 
-            int x = startRect.getX() + width/2 + 1 - blank.length()/2;
-            int y = startRect.getY() + 5;
-            terminal.moveCursor(x, y);
-            terminal.setCursorVisible(true);
-            //end of the organization
+            propsForStore.store(new FileOutputStream(new File("src/" + file + ".properties")), "Saved Level");
 
-            String file = "";
+            //saving the level in the level list properties
+            File levels = new File("src/levels.properties");
 
-            Key key = terminal.readInput();
+            if (levels.exists() && !levels.isDirectory()) {
 
-            while (file.isEmpty() || key == null || key.getKind() != Key.Kind.Enter) {
+                //loading default properties
+                Properties propsDef = new Properties();
+
+                propsDef.load(new FileInputStream(levels));
+
+                //loading updated properties
+                String nameKey = "";
+                for (Object obj : propsDef.keySet()) {
+                    if (propsDef.getProperty((String)obj).equals(file)) {
+                        nameKey = (String)obj;
+                        break;
+                    }
+                }
+                if (nameKey.isEmpty()) {
+                    int n = Integer.parseInt(propsDef.getProperty("Count")) + 1;
+                    propsDef.setProperty("Count", Integer.toString(n));
+                    propsDef.setProperty(Integer.toString(n), file);
+                }
+                else propsDef.setProperty(nameKey, file);
+
+                propsDef.store(new FileOutputStream(levels), "Updated levels");
+            }
+            //default levels don't exist, we create them
+            else {
+
+                Properties propsDef = new Properties();
+
+                propsDef.setProperty("Count", "1");
+                propsDef.setProperty("1", file);
+
+                propsDef.store(new FileOutputStream(levels), "Updated levels");
+
+            }
+
+        } catch (Exception e) { e.printStackTrace(); }
+
+
+        terminal.setCursorVisible(false);
+        draw();
+    }
+
+    public void drawLoadMenu() {
+
+        Terminal terminal = game.getTerminal();
+
+        clearMenu();
+        drawFrame();
+
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream(new File("src/levels.properties")));
+        } catch (Exception e) { properties = null; }
+
+        if (properties == null) {
+
+            highlight("No saved levels available", 1);
+
+            while (true) {
 
                 try {
                     Thread.sleep(50);
                 } catch (Exception e) { e.printStackTrace(); }
 
-                key = terminal.readInput();
+                Key key = terminal.readInput();
 
-                if (key != null && key.getKind() == Key.Kind.NormalKey) {
-
-                    if (file.length() == blank.length() - 1
-                            || !Character.toString(key.getCharacter()).matches("([a-z])|([A-Z])|\\d")) continue;
-
-                    if (file.isEmpty()) {
-                        highlight("SAVE", 3);
-                    }
-
-                    terminal.moveCursor(x,y);
-                    terminal.applyBackgroundColor(Terminal.Color.CYAN);
-                    terminal.putCharacter(key.getCharacter());
-                    x++;
-
-                    file += key.getCharacter();
-                }
-
-                if (key != null && key.getKind() == Key.Kind.Backspace) {
-
-                    if (file.isEmpty()) continue;
-
-                    if (file.length() == 1) {
-                        terminal.applyBackgroundColor(Terminal.Color.WHITE);
-                        writeOut("SAVE", 3);
-                    }
-
-                    x--;
-                    file = file.substring(0, file.length() - 1);
-
-                    terminal.applyBackgroundColor(Terminal.Color.CYAN);
-                    terminal.moveCursor(x, y);
-                    terminal.putCharacter(' ');
-                    terminal.moveCursor(x, y);
-
-                }
-
-                if (key != null && key.getKind() == Key.Kind.Escape) {
-                    terminal.setCursorVisible(false);
+                if (key != null) {
                     draw();
                     return;
                 }
 
             }
 
-            //adding file to the saved ones
-            if (!savedLevels.contains(file)) savedLevels.add(file);
+        }
 
-            Properties propsForStore = new Properties();
-            storeProperties(propsForStore);
+        //the number of saved levels
+        loadLevelsCount = Integer.parseInt(properties.getProperty("Count"));
 
-            //saving the levels details
-            //saved levels list is stored in levels.properties file
-            //if the file doesn't exist, it gets created
+        loadLevelOptions = new String[loadLevelsCount + 1];
+
+        for (int i = 1; i < loadLevelOptions.length; i++) {
+
+            String level = properties.getProperty(Integer.toString(i));
+
+            loadLevelOptions[i] = level;
+
+        }
+
+        setloadLevelChosenOption(1);
+        setLoadLevelPageNumber(1);
+
+        printLoadPage(1, elementNumber(), loadLevelOptions, pageCount());
+
+        highlight(loadLevelOptions[1], 1);
+
+    }
+
+    //number of elements on one of the pages
+    private int elementNumber() { return (height - 4) / 2; }
+
+    //the number of pages needed
+    private int pageCount() { return (loadLevelsCount * 2) / (height - 4) + 1; }
+
+    private void setloadLevelChosenOption(int x) { loadLevelChosenOption = x; }
+
+    public void setLoadLevelPageNumber(int loadLevelPageNumber) {
+        this.loadLevelPageNumber = loadLevelPageNumber;
+    }
+
+    private void controlLoadMenu() {
+
+        Terminal terminal = game.getTerminal();
+
+        Key key = terminal.readInput();
+
+        while (key == null || key.getKind() != Key.Kind.Escape) {
+
             try {
-
-                propsForStore.store(new FileOutputStream(new File("src/" + file + ".properties")), "Saved Level");
-
-                //saving the level in the level list properties
-                File levels = new File("src/levels.properties");
-
-                if (levels.exists() && !levels.isDirectory()) {
-
-                    //loading default properties
-                    Properties propsDef = new Properties();
-
-                    propsDef.load(new FileInputStream(levels));
-
-                    //loading updated properties
-                    String nameKey = "";
-                    for (Object obj : propsDef.keySet()) {
-                        if (propsDef.getProperty((String)obj).equals(file)) {
-                            nameKey = (String)obj;
-                            break;
-                        }
-                    }
-                    if (nameKey.isEmpty()) {
-                        int n = Integer.parseInt(propsDef.getProperty("Count")) + 1;
-                        propsDef.setProperty("Count", Integer.toString(n));
-                        propsDef.setProperty(Integer.toString(n), file);
-                    }
-                    else propsDef.setProperty(nameKey, file);
-
-                    propsDef.store(new FileOutputStream(levels), "Updated levels");
-                }
-                //default levels don't exist, we create them
-                else {
-
-                    Properties propsDef = new Properties();
-
-                    propsDef.setProperty("Count", "1");
-                    propsDef.setProperty("1", file);
-
-                    propsDef.store(new FileOutputStream(levels), "Updated levels");
-
-                }
-
+                Thread.sleep(50);
             } catch (Exception e) { e.printStackTrace(); }
 
+            key = terminal.readInput();
 
-            terminal.setCursorVisible(false);
-            draw();
-            return;
-        }
-
-
-        //Load level
-        if (index == 4) {
-
-            clearMenu();
-
-            Properties properties = new Properties();
-            try {
-                properties.load(new FileInputStream(new File("src/levels.properties")));
-            } catch (Exception e) { properties = null; }
-
-            if (properties == null) {
-
-                highlight("No saved levels available", 1);
-
-                while (true) {
-
-                    try {
-                        Thread.sleep(50);
-                    } catch (Exception e) { e.printStackTrace(); }
-
-                    Key key = terminal.readInput();
-
-                    if (key != null) {
-                        draw();
-                        return;
-                    }
-
+            if (key != null && key.getKind() == Key.Kind.ArrowDown) {
+                if (loadLevelOptions.length == 2) continue;
+                loadLevelChosenOption++;
+                if (loadLevelChosenOption >= loadLevelOptions.length) {
+                    loadLevelChosenOption = 1;
+                    setLoadLevelPageNumber(1);
+                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                    highlight(loadLevelOptions[loadLevelChosenOption], 1);
+                    continue;
                 }
-
-            }
-            //the number of saved levels
-            int n = Integer.parseInt(properties.getProperty("Count"));
-            //the number of pages needed
-            int pageCount = (n * 2) / (height - 4) + 1;
-            //number of elements on one of the pages
-            int elementNumber = (height - 4) / 2;
-
-            String[] options = new String[n + 1];
-
-            for (int i = 1; i < options.length; i++) {
-
-                String level = properties.getProperty(Integer.toString(i));
-
-                options[i] = level;
-
+                if (loadLevelChosenOption > loadLevelPageNumber*elementNumber()) {
+                    loadLevelPageNumber++;
+                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                    highlight(loadLevelOptions[loadLevelChosenOption], 1);
+                    continue;
+                }
+                rehighlightForLoad(loadLevelOptions, loadLevelChosenOption, 1, elementNumber());
             }
 
-            int pageNumber = 1;
+            if (key != null && key.getKind() == Key.Kind.ArrowUp) {
+                if (loadLevelOptions.length == 2) continue;
+                loadLevelChosenOption--;
+                if (loadLevelChosenOption <= 0) {
+                    loadLevelChosenOption = loadLevelOptions.length - 1;
+                    loadLevelPageNumber = pageCount();
+                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                    highlight(loadLevelOptions[loadLevelChosenOption], loadLevelOptions.length - (pageCount() - 1)*elementNumber() - 1);
+                    continue;
+                }
+                if (loadLevelChosenOption <= (loadLevelPageNumber-1)*elementNumber()) {
+                    loadLevelPageNumber--;
+                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                    highlight(loadLevelOptions[loadLevelChosenOption], elementNumber());
+                    continue;
+                }
+                rehighlightForLoad(loadLevelOptions, loadLevelChosenOption, -1, elementNumber());
+            }
 
-            printLoadPage(pageNumber, elementNumber, options, pageCount);
+            if (key != null && key.getKind() == Key.Kind.Enter) {
 
-            highlight(options[1], 1);
+                String chosenLevel = loadLevelOptions[loadLevelChosenOption];
 
-            int chosenOption = 1;
-
-            Key key = terminal.readInput();
-
-            while (key == null || key.getKind() != Key.Kind.Escape) {
+                Properties newLevelProp = new Properties();
 
                 try {
-                    Thread.sleep(50);
+                    newLevelProp.load(new FileInputStream(new File("src/" + chosenLevel + ".properties")));
                 } catch (Exception e) { e.printStackTrace(); }
 
-                key = terminal.readInput();
+                loadLevel(newLevelProp);
 
-                if (key != null && key.getKind() == Key.Kind.ArrowDown) {
-                    if (options.length == 2) continue;
-                    chosenOption++;
-                    if (chosenOption >= options.length) {
-                        chosenOption = 1;
-                        pageNumber = 1;
-                        printLoadPage(pageNumber, elementNumber, options, pageCount);
-                        highlight(options[chosenOption], 1);
-                        continue;
-                    }
-                    if (chosenOption > pageNumber*elementNumber) {
-                        pageNumber++;
-                        printLoadPage(pageNumber, elementNumber, options, pageCount);
-                        highlight(options[chosenOption], 1);
-                        continue;
-                    }
-                    rehighlightForLoad(options, chosenOption, 1, elementNumber);
-                }
+                kill = true;
 
-                if (key != null && key.getKind() == Key.Kind.ArrowUp) {
-                    if (options.length == 2) continue;
-                    chosenOption--;
-                    if (chosenOption <= 0) {
-                        chosenOption = options.length - 1;
-                        pageNumber = pageCount;
-                        printLoadPage(pageNumber, elementNumber, options, pageCount);
-                        highlight(options[chosenOption], options.length - (pageCount - 1)*elementNumber - 1);
-                        continue;
-                    }
-                    if (chosenOption <= (pageNumber-1)*elementNumber) {
-                        pageNumber--;
-                        printLoadPage(pageNumber, elementNumber, options, pageCount);
-                        highlight(options[chosenOption], elementNumber);
-                        continue;
-                    }
-                    rehighlightForLoad(options, chosenOption, -1, elementNumber);
-                }
-
-                if (key != null && key.getKind() == Key.Kind.Enter) {
-
-                    String chosenLevel = options[chosenOption];
-
-                    Properties newLevelProp = new Properties();
-
-                    try {
-                        newLevelProp.load(new FileInputStream(new File("src/" + chosenLevel + ".properties")));
-                    } catch (Exception e) { e.printStackTrace(); }
-
-                    loadLevel(newLevelProp);
-
-                    kill = true;
-
-                    return;
-
-                }
+                return;
 
             }
 
-            draw();
-
         }
+
+        draw();
+    }
+
+    ///after clicking enter and choosing an option
+    public void choose(int index) {
+
+        switch (index) {
+            case 2:
+                drawDocumentation();
+                controlDocumentation();
+                return;
+            case 3:
+                drawSaveMenu();
+                controlSavedMenu();
+                return;
+            case 4:
+                drawLoadMenu();
+                controlLoadMenu();
+                return;
+        }
+
     }
 
     //used for load option window, prints out the pageNumber page of the saved levels list
@@ -565,8 +621,6 @@ public class Menu implements Runnable{
             Thread.sleep(50);
         } catch (Exception e) { e.printStackTrace(); }
 
-        chosenOption = 1;
-
         draw();
 
         kill = false;
@@ -601,14 +655,20 @@ public class Menu implements Runnable{
                     game.setCloseGame(true);
                     break;
                 }
+                isOptionChosen = true;
                 choose(chosenOption);
             }
+
+            isOptionChosen = false;
 
             if (key != null && key.getKind() == Key.Kind.Escape) break;
 
             if (kill) break;
 
         }
+
+        //restarting options
+        chosenOption = 1;
 
         game.getField().drawBorder();
         game.getField().redraw();

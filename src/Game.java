@@ -141,7 +141,7 @@ public class Game implements Terminal.ResizeListener {
             }
 
             //if player won
-            if (player.isWon() && (menuController == null || !menuController.isAlive())) {
+            if (player.isWon() && isMenuClosed()) {
 
                 Key key = terminal.readInput();
 
@@ -153,8 +153,7 @@ public class Game implements Terminal.ResizeListener {
             }
 
             //if player lost
-            if (player.getHealth() <= 0 && (menuController == null || !menuController.isAlive())) {
-
+            if (player.getHealth() <= 0 && isMenuClosed()) {
                 Key key = terminal.readInput();
 
                 if (key != null) {
@@ -165,7 +164,7 @@ public class Game implements Terminal.ResizeListener {
             }
 
             //if the game is still on and menu is closed
-            if (player.getHealth() > 0 && !player.isWon() && ( menuController == null || !menuController.isAlive())) {
+            if (player.getHealth() > 0 && !player.isWon() && isMenuClosed()) {
                 //read next key
                 Key key = terminal.readInput();
 
@@ -199,6 +198,8 @@ public class Game implements Terminal.ResizeListener {
 
     }
 
+    public boolean isMenuClosed() { return menuController == null || !menuController.isAlive(); }
+
     public boolean isCloseGame() { return closeGame; }
 
     //check and make a move
@@ -228,8 +229,15 @@ public class Game implements Terminal.ResizeListener {
 
         menu.calculateFrame();
 
-        if (menuController != null && menuController.isAlive())
-            menu.draw();
+        if (!isMenuClosed()) {
+            if (menu.isOptionChosen())
+            switch (menu.getChosenOption()) {
+                case 2: menu.drawDocumentation(); break;
+                case 3: menu.drawSaveMenu(); break;
+                case 4: menu.drawLoadMenu(); break;
+            }
+            else menu.draw();
+        }
 
         focusScreen(newSize, player, startingPoint, field);
 
