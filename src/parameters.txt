@@ -1,8 +1,8 @@
-Width=1000
+Width=10000
 Height=1000
 NrIn=3
 NrOut=40
 Keys=5
-StaticTraps=50
-DynamicTraps=1000
-Density=0.005
+StaticTraps=5000
+DynamicTraps=10000
+Density=0.1

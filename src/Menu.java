@@ -570,6 +570,7 @@ public class Menu implements Runnable{
         game.setStartingPoint(offset);
         game.setProperties(properties);
 
+        game.getTerminal().clearScreen();
         Field newField = new Field(game);
         newField.drawBorder();
 
@@ -680,8 +681,8 @@ public class Menu implements Runnable{
         game.getField().drawBorder();
         game.getField().redraw();
         game.getPlayer().redraw();
-        game.getStats().redraw();
         Game.focusScreen(game.getTerminal().getTerminalSize(),game.getPlayer(),game.getOffset(),game.getField());
+        game.getStats().redraw();
 
     }
 

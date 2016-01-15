@@ -183,10 +183,8 @@ public class Game implements Terminal.ResizeListener {
                 pause = false;
 
                 //make a move if a respective key was pressed
-                //and if a move was made, redraw the stats just to make sure
                 //and focus the screen if the player has reached the border of the window
-                if (checkMove(player, key)) {
-                    stats.redraw();
+                if (checkMakeMove(player, key)) {
                     focusScreen(terminal.getTerminalSize(), player, startingPoint, field);
                 }
 
@@ -231,7 +229,7 @@ public class Game implements Terminal.ResizeListener {
     public boolean isCloseGame() { return closeGame; }
 
     //check and make a move
-    private static boolean checkMove(Player player, Key key) {
+    private static boolean checkMakeMove(Player player, Key key) {
 
         if (key != null) {
             if (key.getKind() == Key.Kind.ArrowRight) player.move(RIGHT);
@@ -246,6 +244,8 @@ public class Game implements Terminal.ResizeListener {
 
     //if resized, redraw all the objects
     public void onResized(TerminalSize newSize) {
+
+        terminal.clearScreen();
 
         field.drawBorder();
 

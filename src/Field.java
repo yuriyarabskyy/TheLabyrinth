@@ -84,6 +84,7 @@ public class Field {
 
     public void pickUpKey() {
         keysLeft--;
+        game.getStats().redraw();
     }
 
     public Showable[][] getMap() { return map; }
@@ -95,8 +96,6 @@ public class Field {
     public void drawBorder() {
 
         Terminal terminal = game.getTerminal();
-
-        terminal.clearScreen();
 
         terminal.applyBackgroundColor(Terminal.Color.RED);
 
