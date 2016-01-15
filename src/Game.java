@@ -285,7 +285,10 @@ public class Game implements Terminal.ResizeListener {
 
         //right
         if (vector.getX() > windowWidth - 1 && maxRight > windowWidth) {
-            startingPoint.setX(player.getCoordinates().getX() - 2);
+            if (field.getMap().length - 3 < player.getCoordinates().getX())
+                startingPoint.setX(player.getCoordinates().getX() - windowWidth);
+            else
+                startingPoint.setX(player.getCoordinates().getX() - 2);
             changed = true;
         }
 
@@ -298,7 +301,10 @@ public class Game implements Terminal.ResizeListener {
 
         //down
         if (vector.getY() > windowHeight && maxBottom > windowHeight) {
-            startingPoint.setY(player.getCoordinates().getY() - 1);
+            if (field.getMap()[0].length - 3 < player.getCoordinates().getY())
+                startingPoint.setY(player.getCoordinates().getY() - windowHeight);
+            else
+                startingPoint.setY(player.getCoordinates().getY() - 1);
             changed = true;
         }
 

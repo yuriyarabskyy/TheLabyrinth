@@ -123,12 +123,16 @@ public class Field {
         Terminal terminal = game.getTerminal();
         Coordinates startingPoint = game.getOffset();
         for (int i = 0; i < terminal.getTerminalSize().getColumns() - 2; i++) {
-            if (i + startingPoint.getX() >= map.length) continue;
+            //if (i + startingPoint.getX() >= map.length) continue;
             for (int j = 0; j < terminal.getTerminalSize().getRows() - 5; j++) {
-                if (j + startingPoint.getY() >= map[0].length) break;
+                //if (j + startingPoint.getY() >= map[0].length) break;
                 terminal.moveCursor(i + 1, j + 1);
-                if (i + startingPoint.getX() < map.length && i >= -startingPoint.getX() && j >= -startingPoint.getY()
-                && j + startingPoint.getY() < map[0].length
+                if (!(i + startingPoint.getX() >= map.length)
+                        && i + startingPoint.getX() < map.length
+                        && i >= -startingPoint.getX()
+                        && !(j + startingPoint.getY() >= map[0].length)
+                        && j >= -startingPoint.getY()
+                        && j + startingPoint.getY() < map[0].length
                         && map[i + startingPoint.getX()][j + startingPoint.getY()] != null)
                             map[i + startingPoint.getX()][j + startingPoint.getY()].show();
                 else {

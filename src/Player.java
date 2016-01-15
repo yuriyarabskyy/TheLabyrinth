@@ -74,6 +74,13 @@ public class Player {
 
             coordinates.add(vector);
 
+            if (coordinates.getX() < 0 || coordinates.getX() >= game.getField().getMap().length
+                    || coordinates.getY() < 0 || coordinates.getY() >= game.getField().getMap()[0].length) {
+                coordinates.subtract(vector);
+                return;
+            }
+
+
             Showable[][] map = game.getField().getMap();
 
             int x = coordinates.getX();
