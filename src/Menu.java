@@ -541,6 +541,8 @@ public class Menu implements Runnable{
 
         int health = 3;
 
+        game.setKillCheat(true);
+
         DynamicObstacle.coordinatesList.clear();
 
         if (properties.containsKey("Health")) {
@@ -617,8 +619,13 @@ public class Menu implements Runnable{
 
         Terminal terminal = game.getTerminal();
 
+        game.setKillCheat(true);
+
         try {
-            Thread.sleep(50);
+            int waitTime = 50;
+            if (game.getCheatThread() != null && game.getCheatThread().isAlive())
+                waitTime = 260;
+            Thread.sleep(waitTime);
         } catch (Exception e) { e.printStackTrace(); }
 
         draw();

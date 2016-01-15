@@ -50,6 +50,10 @@ public class Game implements Terminal.ResizeListener {
     private boolean pause = false;
     //if the game is about to be closed
     private boolean closeGame = false;
+    //to stop the cheat
+    private boolean killCheat = false;
+
+    private Thread CheatThread = null;
 
 
     //getters
@@ -74,6 +78,10 @@ public class Game implements Terminal.ResizeListener {
     public Stats getStats() {
         return stats;
     }
+    public boolean killCheat() { return killCheat; }
+    public Thread getCheatThread() {
+        return CheatThread;
+    }
 
     //setters
     public void setProperties(Properties properties) {
@@ -89,7 +97,10 @@ public class Game implements Terminal.ResizeListener {
     public void setDynobList(List<DynamicObstacle> dynobList) { this.dynobList = dynobList; }
     public void setPlayer(Player player) { this.player = player; }
     public void setPause(boolean pause) { this.pause = pause; }
-
+    public void setKillCheat(boolean killCheat) {
+        if (CheatThread != null && CheatThread.isAlive())
+        this.killCheat = killCheat;
+    }
 
     //that's where the logic of the game is situated at
     public void go() {
@@ -179,6 +190,21 @@ public class Game implements Terminal.ResizeListener {
                     focusScreen(terminal.getTerminalSize(), player, startingPoint, field);
                 }
 
+                if (key != null && key.getKind() == Key.Kind.NormalKey) {
+
+                    if (key.getCharacter() == 'c' && (CheatThread == null || !CheatThread.isAlive())) {
+
+                        CheatThread = new Thread(new Cheat(this));
+                        CheatThread.start();
+
+                    }
+
+                    if (key.getCharacter() == 'v') {
+                         setKillCheat(true);
+                    }
+
+                }
+
                 //open the menu on escape
                 if (key != null && key.getKind() == Key.Kind.Escape) {
 
@@ -193,6 +219,8 @@ public class Game implements Terminal.ResizeListener {
             else pause = true;
 
         }
+
+        killCheat = true;
 
         terminal.exitPrivateMode();
 

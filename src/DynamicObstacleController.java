@@ -19,7 +19,7 @@ public class DynamicObstacleController implements Runnable {
         while (!game.isCloseGame()) {
 
             try {
-                Thread.sleep(200);
+                Thread.sleep(400);
             } catch (Exception e) {
                 e.printStackTrace();
             }

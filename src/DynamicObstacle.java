@@ -15,7 +15,6 @@ public class DynamicObstacle extends Obstacle{
     }
 
     private static final Coordinates[] directions = {new Coordinates(1,0),new Coordinates(0,1),new Coordinates(-1,0),new Coordinates(0,-1)};
-    private static final Character[] directionsCh = {'r','d','l','u'};
     public static int    difficultyLevel = 11;
 
 
@@ -57,7 +56,7 @@ public class DynamicObstacle extends Obstacle{
                     if (player.getCoordinates().equals(coordinates))
                         player.redraw();
                     else
-                        drawField(x, y, Terminal.Color.BLUE);
+                        field.redraw(coordinates);
                 }
             }
             getNextCoordinate(player.getCoordinates(), field);
@@ -83,7 +82,7 @@ public class DynamicObstacle extends Obstacle{
 
             if (pathIndex == pathToPlayer.length() / 2 || pathIndex == pathToPlayer.length() * 0.25 || pathToPlayer.isEmpty()
                     || pathIndex == pathToPlayer.length() * 0.75 || pathIndex >= pathToPlayer.length())
-                pathNew = searchPath(playerCoordinates, field.getMap());
+                pathNew = Finder.searchPath(coordinates, playerCoordinates, field.getMap(), difficultyLevel);
 
             if (!pathNew.isEmpty()) {
                 pathToPlayer = pathNew;
@@ -133,65 +132,6 @@ public class DynamicObstacle extends Obstacle{
         }
     }
 
-    private String searchPath(Coordinates playerCoordinates, Showable[][] map) {
-
-        Queue<Pair> queue = new LinkedList<>();
-
-        Set<Coordinates> visitedCoords = new HashSet<>();
-
-        for (int i = 0; i < 4; i++) {
-
-            Coordinates vect = coordinates.clone().add(directions[i]);
-
-            if (vect.getX() > 0 && vect.getX() < map.length &&
-                    vect.getY() > 0 && map[vect.getX()][vect.getY()] == null) {
-
-                Pair pair = new Pair(vect, Character.toString(directionsCh[i]));
-                queue.add(pair);
-                visitedCoords.add(vect);
-
-            }
-
-        }
-
-        if (queue.isEmpty()) return "";
-
-        //if the player could not be found choose a random path
-        int randomIndex = difficultyLevel*200 - (int) (Math.random() * 1000) - 500;
-        String randomRoute = "";
-
-        for (int i = 0; i < difficultyLevel*200; i++) {
-
-            if (queue.isEmpty()) return randomRoute;
-
-            Pair next = queue.remove();
-
-            if (next.coordinates.equals(playerCoordinates)) return next.path;
-
-            for (int j = 0; j < 4; j++) {
-
-                Coordinates vect = next.coordinates.clone().add(directions[j]);
-
-                if (vect.getX() > 0 && vect.getX() < map.length && !visitedCoords.contains(vect) &&
-                        vect.getY() > 0 && vect.getY() < map[0].length && map[vect.getX()][vect.getY()] == null) {
-
-                    Pair pair = new Pair(vect, next.path + directionsCh[j]);
-                    queue.add(pair);
-                    visitedCoords.add(vect);
-
-                    if (i >= randomIndex && randomRoute.isEmpty()) randomRoute = next.path;
-
-                }
-
-            }
-
-
-        }
-
-        return randomRoute;
-
-    }
-
     private boolean onScreen(int x, int y) {
         if (x > terminal.getTerminalSize().getColumns() - 2 ||
                 y > terminal.getTerminalSize().getRows() - 5 || x <= 0 || y <= 0) return false;
@@ -205,18 +145,6 @@ public class DynamicObstacle extends Obstacle{
         terminal.moveCursor(x, y);
 
         terminal.putCharacter(' ');
-    }
-
-    public class Pair {
-
-        public Coordinates coordinates;
-
-        public String path;
-
-        public Pair(Coordinates coordinates, String path) {
-            this.coordinates = coordinates;
-            this.path = path;
-        }
     }
 
 }
