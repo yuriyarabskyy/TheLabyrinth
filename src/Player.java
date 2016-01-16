@@ -57,10 +57,10 @@ public class Player {
             if (!gotHit) terminal.applyBackgroundColor(Terminal.Color.WHITE);
             else terminal.applyBackgroundColor(Terminal.Color.RED);
 
+            terminal.applyForegroundColor(Terminal.Color.BLACK);
             terminal.putCharacter(' ');
 
         }
-
     }
 
     //makes a move after checking if it's possible
@@ -73,13 +73,6 @@ public class Player {
             Coordinates oldCoord = coordinates.clone();
 
             coordinates.add(vector);
-
-            if (coordinates.getX() < 0 || coordinates.getX() >= game.getField().getMap().length
-                    || coordinates.getY() < 0 || coordinates.getY() >= game.getField().getMap()[0].length) {
-                coordinates.subtract(vector);
-                return;
-            }
-
 
             Showable[][] map = game.getField().getMap();
 
@@ -106,6 +99,13 @@ public class Player {
 
                 if (map[x][y] != null && map[x][y] instanceof Exit && game.getField().getKeysLeft() == 0) {
 
+                    if (game.getCheatThread() != null && game.getCheatThread().isAlive()) {
+                        game.setKillCheat(true);
+                        try {
+                            Thread.sleep(260);
+                        } catch (Exception e) { e.printStackTrace(); }
+                    }
+                    game.setPause(true);
                     game.getMenu().drawFrame();
                     game.getMenu().clearMenu();
                     game.getMenu().writeOut("You just won the game!", 2);
@@ -119,17 +119,13 @@ public class Player {
 
                 }
 
-            }
+                //redrawing
+                game.getField().redraw(oldCoord);
 
-            if (x < 0 || y < 0) {
-                coordinates = oldCoord;
-                return;
-            }
+                redraw();
 
-            //redrawing
-            game.getField().redraw(oldCoord);
+            } else coordinates = oldCoord;
 
-            redraw();
         }
 
     }
@@ -162,6 +158,12 @@ public class Player {
             redraw();
 
             if (health == 0) {
+                if (game.getCheatThread() != null && game.getCheatThread().isAlive()) {
+                    game.setKillCheat(true);
+                    try {
+                        Thread.sleep(260);
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
                 game.setPause(true);
                 game.getMenu().drawFrame();
                 game.getMenu().clearMenu();

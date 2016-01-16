@@ -55,6 +55,10 @@ public class Game implements Terminal.ResizeListener {
 
     private Thread CheatThread = null;
 
+    private Cheat cheat = null;
+
+    private boolean resetDynamicObstacles = true;
+
 
     //getters
     public Terminal   getTerminal() {
@@ -82,6 +86,9 @@ public class Game implements Terminal.ResizeListener {
     public Thread getCheatThread() {
         return CheatThread;
     }
+    public boolean isResetDynamicObstacles() {
+        return resetDynamicObstacles;
+    }
 
     //setters
     public void setProperties(Properties properties) {
@@ -100,6 +107,9 @@ public class Game implements Terminal.ResizeListener {
     public void setKillCheat(boolean killCheat) {
         if (CheatThread != null && CheatThread.isAlive())
         this.killCheat = killCheat;
+    }
+    public void setResetDynamicObstacles(boolean resetDynamicObstacles) {
+        this.resetDynamicObstacles = resetDynamicObstacles;
     }
 
     //that's where the logic of the game is situated at
@@ -192,7 +202,8 @@ public class Game implements Terminal.ResizeListener {
 
                     if (key.getCharacter() == 'c' && (CheatThread == null || !CheatThread.isAlive())) {
 
-                        CheatThread = new Thread(new Cheat(this));
+                        cheat = new Cheat(this);
+                        CheatThread = new Thread(cheat);
                         CheatThread.start();
 
                     }
@@ -263,6 +274,7 @@ public class Game implements Terminal.ResizeListener {
                 case 2: menu.drawDocumentation(); break;
                 case 3: menu.drawSaveMenu(); break;
                 case 4: menu.drawLoadMenu(); break;
+                case 5: menu.drawFeatures(); break;
             }
             else menu.draw();
         }

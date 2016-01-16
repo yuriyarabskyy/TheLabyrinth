@@ -12,19 +12,22 @@ public class Finder {
     private static final Character[] directionsCh = {'r','d','l','u'};
 
 
-    //uses breadth-first search in its core to find the next move
+    //uses my own search algorithm to find the next move
     public static String searchPath(Coordinates coordinates, Coordinates playerCoordinates, Showable[][] map, int area) {
 
         Queue<Pair> queue = new LinkedList<>();
 
         Set<Coordinates> visitedCoords = new HashSet<>();
 
+        if (area < Integer.MAX_VALUE) area *= 200;
+
         for (int i = 0; i < 4; i++) {
 
             Coordinates vect = coordinates.clone().add(directions[i]);
 
-            if (vect.getX() > 0 && vect.getX() < map.length && vect.getY() < map[0].length
-                    && vect.getY() > 0 && (map[vect.getX()][vect.getY()] == null || map[vect.getX()][vect.getY()] instanceof Arrow)) {
+            if (vect.getX() >= 0 && vect.getX() < map.length && vect.getY() < map[0].length
+                    && vect.getY() >= 0 && (map[vect.getX()][vect.getY()] == null || map[vect.getX()][vect.getY()] instanceof Arrow
+                    || vect.equals(playerCoordinates))) {
 
                 Pair pair = new Pair(vect, Character.toString(directionsCh[i]));
                 queue.add(pair);
@@ -37,26 +40,28 @@ public class Finder {
         if (queue.isEmpty()) return "";
 
         //if the player could not be found choose a random path
-        int randomIndex = area*200 - (int) (Math.random() * 1000) - 500;
+        int randomIndex = area - (int) (Math.random() * 1000) - 500;
         String randomRoute = "";
 
-        for (int i = 0; i < area*200; i++) {
+        for (int i = 0; i < area; i++) {
 
-            if (queue.isEmpty()) return randomRoute;
+            //1 at the end marks that the route is random
+            if (queue.isEmpty()) return randomRoute + '1';
 
             Pair next = queue.remove();
-
-            if (next.getCoordinates().equals(playerCoordinates)) return next.getPath();
 
             for (int j = 0; j < 4; j++) {
 
                 Coordinates vect = next.getCoordinates().clone().add(directions[j]);
 
-                if (vect.getX() > 0 && vect.getX() < map.length && !visitedCoords.contains(vect) &&
-                        vect.getY() > 0 && vect.getY() < map[0].length
-                        && (map[vect.getX()][vect.getY()] == null || map[vect.getX()][vect.getY()] instanceof Arrow)) {
+                if (vect.getX() >= 0 && vect.getX() < map.length && !visitedCoords.contains(vect) &&
+                        vect.getY() >= 0 && vect.getY() < map[0].length
+                        && (map[vect.getX()][vect.getY()] == null || map[vect.getX()][vect.getY()] instanceof Arrow
+                        || vect.equals(playerCoordinates)))
+                {
 
                     Pair pair = new Pair(vect, next.getPath() + directionsCh[j]);
+                    if (pair.getCoordinates().equals(playerCoordinates)) return pair.getPath();
                     queue.add(pair);
                     visitedCoords.add(vect);
 
@@ -69,7 +74,7 @@ public class Finder {
 
         }
 
-        return randomRoute;
+        return randomRoute + '1';
 
     }
 

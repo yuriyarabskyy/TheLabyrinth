@@ -16,8 +16,9 @@ public class Entrance implements Showable{
     public void show() {
 
         terminal.applyBackgroundColor(Terminal.Color.DEFAULT);
+        terminal.applyForegroundColor(Terminal.Color.WHITE);
 
-        terminal.putCharacter(' ');
+        terminal.putCharacter('E');
 
     }
 

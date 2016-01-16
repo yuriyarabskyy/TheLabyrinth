@@ -39,7 +39,7 @@ public class DynamicObstacle extends Obstacle{
 
     }
 
-    public void move(Field field, Coordinates offset, Player player) {
+    public void move(Field field, Coordinates offset, Player player, boolean isStart) {
 
             //calculating the relative x and y for the screen
             int x = coordinates.getX() - offset.getX() + 1;
@@ -47,7 +47,7 @@ public class DynamicObstacle extends Obstacle{
 
             boolean onScreen = onScreen(x, y);
 
-            if (!onScreen && pathToPlayer.isEmpty()) return;
+            if (!onScreen && pathToPlayer.isEmpty() && !isStart) return;
 
             coordinatesList.remove(coordinates);
 
@@ -59,7 +59,9 @@ public class DynamicObstacle extends Obstacle{
                         field.redraw(coordinates);
                 }
             }
-            getNextCoordinate(player.getCoordinates(), field);
+
+            if (isStart) getNextCoordinate(player.getCoordinates(), field, Integer.MAX_VALUE);
+            else getNextCoordinate(player.getCoordinates(), field, difficultyLevel);
 
             x = coordinates.getX() - offset.getX() + 1;
             y = coordinates.getY() - offset.getY() + 1;
@@ -75,8 +77,7 @@ public class DynamicObstacle extends Obstacle{
 
     }
 
-    //uses breadth-first search in its core to find the next move
-    private void getNextCoordinate(Coordinates playerCoordinates, Field field) {
+    private void getNextCoordinate(Coordinates playerCoordinates, Field field, int difficultyLevel) {
 
             String pathNew = "";
 
@@ -84,9 +85,10 @@ public class DynamicObstacle extends Obstacle{
                     || pathIndex == pathToPlayer.length() * 0.75 || pathIndex >= pathToPlayer.length())
                 pathNew = Finder.searchPath(coordinates, playerCoordinates, field.getMap(), difficultyLevel);
 
-            if (!pathNew.isEmpty()) {
-                pathToPlayer = pathNew;
+            if (!pathNew.isEmpty() && (pathNew.charAt(pathNew.length() - 1) != '1' || pathIndex >= pathToPlayer.length())) {
                 pathIndex = 0;
+                if (pathNew.charAt(pathNew.length() - 1) == '1') pathToPlayer = pathNew.substring(0, pathNew.length() - 1);
+                else pathToPlayer = pathNew;
             }
 
             if (!pathToPlayer.isEmpty() && pathIndex < pathToPlayer.length()) {

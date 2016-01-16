@@ -4,6 +4,10 @@ import org.omg.PortableServer.THREAD_POLICY_ID;
 /**
  * Created by yuriyarabskyy on 14/01/16.
  */
+
+/**
+ * Displays a route to the next place, the player has to go
+ */
 public class Cheat implements Runnable {
 
     private Game game;
@@ -14,6 +18,8 @@ public class Cheat implements Runnable {
 
     Cheat(Game game) { this.game = game; }
 
+
+    public String getRoute() { return route; }
 
     private void giveRoute() {
 
@@ -78,7 +84,8 @@ public class Cheat implements Runnable {
 
             if ((which == 1 && x%3 == 0)||(which == 2 && y%2 == 0))
                 if (onScreen(columns, rows, screenX,screenY)
-                        && !DynamicObstacle.coordinatesList.contains(new Coordinates(x, y))) {
+                        && !DynamicObstacle.coordinatesList.contains(new Coordinates(x, y))
+                        && !game.getPlayer().getCoordinates().equals(new Coordinates(x, y))) {
                     synchronized (terminal) {
                         terminal.moveCursor(screenX, screenY);
                         map[x][y].show();
@@ -166,6 +173,7 @@ public class Cheat implements Runnable {
 
         while (!game.killCheat()) {
 
+            //every fourth time the root gets updated
             counter = (counter + 1) % 5;
 
             if (counter == 0) {

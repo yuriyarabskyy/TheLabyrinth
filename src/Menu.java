@@ -12,7 +12,7 @@ import java.util.Properties;
  */
 public class Menu implements Runnable{
 
-    private static String[] options = {"MENU", "CONTINUE", "DOCUMENTATION", "SAVE LEVEL", "LOAD LEVEL", "EXIT"};
+    private static String[] options = {"MENU", "CONTINUE", "DOCUMENTATION", "SAVE LEVEL", "LOAD LEVEL", "Features", "EXIT"};
     //width and height are later dynamically calculated from the window size
     private int width = 0, height = 0;
 
@@ -45,7 +45,7 @@ public class Menu implements Runnable{
         width = game.getTerminal().getTerminalSize().getColumns() - 2;
         height = game.getTerminal().getTerminalSize().getRows() - 5;
 
-        startRect = new Coordinates((int) (width * 0.3), (int) (height * 0.25));
+        startRect = new Coordinates((int) (width * 0.15), (int) (height * 0.15));
 
         width -= 2 * startRect.getX();
         height -= 2 * startRect.getY();
@@ -133,6 +133,56 @@ public class Menu implements Runnable{
         for (int i = 0; i < option.length(); i++) terminal.putCharacter(option.charAt(i));
     }
 
+    //writes text into the menu, checks if word fits into the line
+    //* means start new line in the string
+    public void writeText(String text) {
+
+        Terminal terminal = game.getTerminal();
+
+        terminal.applyBackgroundColor(Terminal.Color.WHITE);
+        terminal.applyForegroundColor(Terminal.Color.BLACK);
+
+        terminal.moveCursor(startRect.getX() + 2, startRect.getY() + 1);
+
+        int i = 0, y = startRect.getY() + 1;
+
+        String[] words = text.trim().split(" ");
+
+        while (i < words.length) {
+
+            int j = 0;
+
+            while (i < words.length && (j + words[i].length() < width - 4 || words[i].equals("*"))) {
+
+                if (words[i].equals("*")) {
+                    y++;
+                    j = 0;
+                    words[i] = "";
+                    terminal.moveCursor(startRect.getX() + 2, y);
+                }
+
+                if (!words[i].isEmpty()) {
+
+                    for (int k = 0; k < words[i].length(); k++)
+                        terminal.putCharacter(words[i].charAt(k));
+
+                    terminal.putCharacter(' ');
+
+                    j += words[i].length() + 1;
+
+                }
+
+                i++;
+
+            }
+
+            y++;
+            terminal.moveCursor(startRect.getX() + 2, y);
+
+        }
+
+    }
+
     public void highlight(String option, int row) {
         Terminal terminal = game.getTerminal();
         terminal.applyBackgroundColor(Terminal.Color.RED);
@@ -186,16 +236,17 @@ public class Menu implements Runnable{
 
         clearMenu();
         drawFrame();
-        writeOut("White - player", 0);
-        writeOut("K - key", 1);
+        writeOut("Yellow - dynamic obstacle", 1);
         writeOut("Cyan - static obstacle", 2);
-        writeOut("Yellow - dynamic obstacle", 3);
-        writeOut("Green - exit", 4);
-        highlight("Back", 5);
+        writeOut("Magenta K - key", 3);
+        writeOut("White - player", 4);
+        writeOut("Green - exit", 5);
+        writeOut("E - entrance", 6);
+        highlight("Back", height/2 - 1);
 
     }
 
-    private void controlDocumentation() {
+    private void controlBack() {
 
         Terminal terminal = game.getTerminal();
 
@@ -427,6 +478,7 @@ public class Menu implements Runnable{
 
         Key key = terminal.readInput();
 
+        if (loadLevelOptions != null)
         while (key == null || key.getKind() != Key.Kind.Escape) {
 
             try {
@@ -435,65 +487,84 @@ public class Menu implements Runnable{
 
             key = terminal.readInput();
 
-            if (key != null && key.getKind() == Key.Kind.ArrowDown) {
-                if (loadLevelOptions.length == 2) continue;
-                loadLevelChosenOption++;
-                if (loadLevelChosenOption >= loadLevelOptions.length) {
-                    loadLevelChosenOption = 1;
-                    setLoadLevelPageNumber(1);
-                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
-                    highlight(loadLevelOptions[loadLevelChosenOption], 1);
-                    continue;
+                if (key != null && key.getKind() == Key.Kind.ArrowDown) {
+                    if (loadLevelOptions.length == 2) continue;
+                    loadLevelChosenOption++;
+                    if (loadLevelChosenOption >= loadLevelOptions.length) {
+                        loadLevelChosenOption = 1;
+                        setLoadLevelPageNumber(1);
+                        printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                        highlight(loadLevelOptions[loadLevelChosenOption], 1);
+                        continue;
+                    }
+                    if (loadLevelChosenOption > loadLevelPageNumber * elementNumber()) {
+                        loadLevelPageNumber++;
+                        printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                        highlight(loadLevelOptions[loadLevelChosenOption], 1);
+                        continue;
+                    }
+                    rehighlightForLoad(loadLevelOptions, loadLevelChosenOption, 1, elementNumber());
                 }
-                if (loadLevelChosenOption > loadLevelPageNumber*elementNumber()) {
-                    loadLevelPageNumber++;
-                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
-                    highlight(loadLevelOptions[loadLevelChosenOption], 1);
-                    continue;
+
+                if (key != null && key.getKind() == Key.Kind.ArrowUp) {
+                    if (loadLevelOptions.length == 2) continue;
+                    loadLevelChosenOption--;
+                    if (loadLevelChosenOption <= 0) {
+                        loadLevelChosenOption = loadLevelOptions.length - 1;
+                        loadLevelPageNumber = pageCount();
+                        printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                        highlight(loadLevelOptions[loadLevelChosenOption], loadLevelOptions.length - (pageCount() - 1) * elementNumber() - 1);
+                        continue;
+                    }
+                    if (loadLevelChosenOption <= (loadLevelPageNumber - 1) * elementNumber()) {
+                        loadLevelPageNumber--;
+                        printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
+                        highlight(loadLevelOptions[loadLevelChosenOption], elementNumber());
+                        continue;
+                    }
+                    rehighlightForLoad(loadLevelOptions, loadLevelChosenOption, -1, elementNumber());
                 }
-                rehighlightForLoad(loadLevelOptions, loadLevelChosenOption, 1, elementNumber());
-            }
 
-            if (key != null && key.getKind() == Key.Kind.ArrowUp) {
-                if (loadLevelOptions.length == 2) continue;
-                loadLevelChosenOption--;
-                if (loadLevelChosenOption <= 0) {
-                    loadLevelChosenOption = loadLevelOptions.length - 1;
-                    loadLevelPageNumber = pageCount();
-                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
-                    highlight(loadLevelOptions[loadLevelChosenOption], loadLevelOptions.length - (pageCount() - 1)*elementNumber() - 1);
-                    continue;
+                if (key != null && key.getKind() == Key.Kind.Enter) {
+
+                    String chosenLevel = loadLevelOptions[loadLevelChosenOption];
+
+                    Properties newLevelProp = new Properties();
+
+                    try {
+                        newLevelProp.load(new FileInputStream(new File("src/" + chosenLevel + ".properties")));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    loadLevel(newLevelProp);
+
+                    kill = true;
+
+                    return;
+
                 }
-                if (loadLevelChosenOption <= (loadLevelPageNumber-1)*elementNumber()) {
-                    loadLevelPageNumber--;
-                    printLoadPage(loadLevelPageNumber, elementNumber(), loadLevelOptions, pageCount());
-                    highlight(loadLevelOptions[loadLevelChosenOption], elementNumber());
-                    continue;
-                }
-                rehighlightForLoad(loadLevelOptions, loadLevelChosenOption, -1, elementNumber());
-            }
-
-            if (key != null && key.getKind() == Key.Kind.Enter) {
-
-                String chosenLevel = loadLevelOptions[loadLevelChosenOption];
-
-                Properties newLevelProp = new Properties();
-
-                try {
-                    newLevelProp.load(new FileInputStream(new File("src/" + chosenLevel + ".properties")));
-                } catch (Exception e) { e.printStackTrace(); }
-
-                loadLevel(newLevelProp);
-
-                kill = true;
-
-                return;
-
-            }
 
         }
 
         draw();
+    }
+
+    public void drawFeatures() {
+
+        clearMenu();
+        drawFrame();
+
+        writeText("1. The game is fully resizable, try it. Try Opening the menu, choosing an option and then resizing. * " +
+                "2. In the Save option I've created my own field, where you can enter text to name the level. * " +
+                "3. In the Load option, if the list of saved levels is too big, it gets split into several pages. * " +
+                "4. Press 'C' to get the route to the next closest key. Press 'V' to turn it off. * " +
+                "5. All dynamic obstacles use my own algorithm to search for the player. The radius of the search can be adjusted " +
+                "by changing the difficulty level in DynamicObstacle class. * " +
+                "6. If the player gets hurt, he turns red for a couple of seconds and during this time is immortal.");
+
+        highlight("Back", height/2 - 1);
+
     }
 
     ///after clicking enter and choosing an option
@@ -502,7 +573,7 @@ public class Menu implements Runnable{
         switch (index) {
             case 2:
                 drawDocumentation();
-                controlDocumentation();
+                controlBack();
                 return;
             case 3:
                 drawSaveMenu();
@@ -512,6 +583,9 @@ public class Menu implements Runnable{
                 drawLoadMenu();
                 controlLoadMenu();
                 return;
+            case 5:
+                drawFeatures();
+                controlBack();
         }
 
     }
@@ -519,7 +593,7 @@ public class Menu implements Runnable{
     //used for load option window, prints out the pageNumber page of the saved levels list
     private void printLoadPage(int pageNumber, int elementNumber, String[] options, int pageCount) {
 
-        writeOut("Press Escape to get back | Page " + pageNumber + '\\' + pageCount +  " \u21c4", 0);
+        writeOut("Press Escape to get back | Page " + pageNumber + '\\' + pageCount, 0);
 
         for (int i = (pageNumber - 1)*elementNumber + 1; i <= pageNumber*elementNumber; i++) {
 
@@ -565,13 +639,14 @@ public class Menu implements Runnable{
         }
 
         List<DynamicObstacle> dynamicObstacleList = new LinkedList<>();
+        game.setResetDynamicObstacles(true);
 
         game.setDynobList(dynamicObstacleList);
         game.setStartingPoint(offset);
         game.setProperties(properties);
 
-        game.getTerminal().clearScreen();
         Field newField = new Field(game);
+        game.getTerminal().clearScreen();
         newField.drawBorder();
 
         if (playerCoord == null) playerCoord = newField.getEntrance();

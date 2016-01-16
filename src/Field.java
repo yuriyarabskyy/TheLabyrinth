@@ -97,21 +97,25 @@ public class Field {
 
         Terminal terminal = game.getTerminal();
 
-        terminal.applyBackgroundColor(Terminal.Color.RED);
+        synchronized (terminal) {
 
-        terminal.moveCursor(0,0);
-        for (int i = 0; i < terminal.getTerminalSize().getColumns(); i++)
-            terminal.putCharacter(' ');
+            terminal.applyBackgroundColor(Terminal.Color.RED);
 
-        terminal.moveCursor(0, terminal.getTerminalSize().getRows() - 4);
-        for (int i = 0; i < terminal.getTerminalSize().getColumns(); i++)
-            terminal.putCharacter(' ');
+            terminal.moveCursor(0, 0);
+            for (int i = 0; i < terminal.getTerminalSize().getColumns(); i++)
+                terminal.putCharacter(' ');
 
-        for (int i = 1; i < terminal.getTerminalSize().getRows() - 4; i++) {
-            terminal.moveCursor(0,i);
-            terminal.putCharacter(' ');
-            terminal.moveCursor(terminal.getTerminalSize().getColumns() - 1, i);
-            terminal.putCharacter(' ');
+            terminal.moveCursor(0, terminal.getTerminalSize().getRows() - 4);
+            for (int i = 0; i < terminal.getTerminalSize().getColumns(); i++)
+                terminal.putCharacter(' ');
+
+            for (int i = 1; i < terminal.getTerminalSize().getRows() - 4; i++) {
+                terminal.moveCursor(0, i);
+                terminal.putCharacter(' ');
+                terminal.moveCursor(terminal.getTerminalSize().getColumns() - 1, i);
+                terminal.putCharacter(' ');
+            }
+
         }
 
         terminal.applyBackgroundColor(Terminal.Color.DEFAULT);
